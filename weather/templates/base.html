@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+
+{% block head-tag %}
+<head>
+	{% endblock head-tag %}
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title>{% block header %}Tor Weather{% endblock %}</title>
+	<link rel="stylesheet" type="text/css" href="http://weather.torproject.org/stylesheet.css">
+	<link rel="stylesheet" type="text/css" href="/media/style.css">
+	{% block extra_css %}{% endblock extra_css %}
+	{% block script %}{% endblock script %}
+</head>
+
+<body>
+	
+	<div id="center">
+		<div id="banner">
+			<a href="https://www.torproject.org/"><img
+				src="http://weather.torproject.org/top-left.png" alt="Click to
+				go to home page" width="193" height="79" /></a>
+			<img src="http://weather.torproject.org/top-right.png" />
+		</div>
+
+		<div id="main-column">
+			<h1 id="page-title">{% block title %}Tor Weather{% endblock %}</h1>
+
+			{% block content %}
+			{% endblock content %}
+
+			{% block footer %}
+			<div class="footer">
+				<p id="weather-legal">
+					Please note that while we won't ever intentionally publish them, the address/node pairs sent to this server are not protected against SMTP eavesdropping, hacking, or lawyers.
+				</p>
+
+				<p id="trademark">
+					"Tor" and the "Onion Logo" are <a target=_BLANK href="https://www.torproject.org/trademark-faq.html.en">registered trademarks</a> of The Tor Project, Inc.
+				</p>
+
+				<p id="creative-commons">
+					Content on this site is licensed under a <a target=_BLANK href="http://creativecommons.org/licenses/by/3.0/us/">Creative Commons Attribution 3.0 United States License</a>, unless otherwise noted.
+				</p>
+			</div>
+			{% endblock footer %}
+		</div>
+	</div>
+</body>
+
+</html>
+

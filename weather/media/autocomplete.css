@@ -1,0 +1,26 @@
+#searchField {
+	width: 200px;
+}
+
+#search-results {
+	border: 1px solid #666;
+	border-bottom: 0px;
+	font-size: 10px;
+	font-family: arial;
+	padding: 0px;
+}
+
+#search-results div {
+    border-bottom: 1px solid #666;
+    padding: 3px;
+}
+
+#search-results .selected {
+	background-color: #666;
+	color: #fff;
+}
+
+#search-results .unselected {
+	background-color: #fff;
+	color: #666;
+}

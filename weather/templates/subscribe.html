@@ -1,0 +1,69 @@
+{% extends "generic_form.html" %}
+
+{% block head-tag %}
+<head id="subscribe-page">
+{% endblock head-tag %}
+
+{% block header %}
+Tor Weather - Sign Up!
+{% endblock header %}
+
+{% block title %}
+Tor Weather - Sign Up!
+{% endblock title %}
+
+{% block extra_script %}
+<script type="text/javascript" src="/media/dimensions.js"></script>
+<script type="text/javascript" src="/media/autocomplete.js"></script>
+{% endblock extra_script %}
+
+{% block extra_css %}
+<link type="text/css" rel="stylesheet" href="/media/autocomplete.css">
+{% endblock extra_css %}
+
+{% block form-tag %}
+<form method="post" action="/subscribe/" id="subscribe-form">{% csrf_token %}
+{% endblock form-tag %}
+
+{% block user-info %}
+<div class="field-container">
+	<p>{{ form.email_1.label_tag }}</p>
+	{% for error in form.email_1.errors %}
+	<p class="form-error">{{ error|safe }}</p>
+	{% endfor %}
+	{{ form.email_1 }}
+</div>
+
+<div class="field-container">
+	<p>{{ form.email_2.label_tag }}</p>
+	{% for error in form.email_2.errors %}
+	<p class="form-error">{{ error|safe }}</p>
+	{% endfor %}
+	{{ form.email_2 }}
+</div>
+
+<div id="fingerprint-row">
+	<div class="field-container" id="fingerprint-container">
+		<p>
+			{{ form.fingerprint.label_tag }}
+			<a href="javascript: void()" id="show-search-link"><span>(search by router name)</span></a>
+		</p>
+		{% for error in form.fingerprint.errors %}
+		<p class="form-error">{{ error|safe}}</p>
+		{% endfor %}
+		{{ form.fingerprint }}
+	</div>
+
+	<div class="field-container" id="search-container">
+		<p>{{ form.router_search.label_tag }}</p>
+		<button type="button" id="router-search-submit" name="router-search-submit" value="&lt;">&lt;</button>
+		<span>{{ form.router_search }}</span>
+	</div>
+
+</div>
+
+{% endblock user-info %}
+
+{% block submit-button %}
+<input id="submit-button" type="submit" value="Subscribe to Tor Weather!" />
+{% endblock submit-button %}

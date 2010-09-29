@@ -1,0 +1,25 @@
+{% extends "generic_form.html" %}
+
+{% block head-tag %}
+<head id="preferences-page">
+{% endblock head-tag %}
+
+{% block header %}
+Tor Weather - Preferences
+{% endblock header %}
+
+{% block title %}
+Tor Weather - Preferences
+{% endblock title %}
+
+{% block form-tag %}
+<form method="post" action="/preferences/{{ pref_auth }}/"> {% csrf_token %}
+{% endblock form-tag %}
+
+{% block user-info %}
+{{ form.user_info|safe }}
+{% endblock user-info %}
+
+{% block submit-button %}
+<input id="submit-button" type="submit" value="Save Preferences" />
+{% endblock submit-button %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block header %}
+Tor Weather - Confirmation Successful
+{% endblock header %}
+
+{% block title %}
+Tor Weather - Confirmation Successful
+{% endblock title %}
+
+{% block content %}
+<p>
+	You are now able to receive Tor Weather reports at {{ email }}.
+</p>
+
+<p>
+	You can unsubscribe anytime with the following link: <br />
+	<a href = "{{ unsubURL }}">{{ unsubURL }}</a>
+</p>
+
+<p>
+	You can change your preferences here:
+	<a href = "{{ prefURL }}">{{ prefURL }}</a>
+</p>
+{% endblock content %}
+

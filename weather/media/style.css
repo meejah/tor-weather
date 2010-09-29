@@ -1,0 +1,262 @@
+div#center {
+	text-align: center;
+	max-width: 760px;
+	min-width: 415px;
+	width: 85%;
+	overflow: auto;
+	margin: 0 auto 0;
+}
+
+	#banner img {
+		float: right;
+	}
+
+	#banner a img {
+		float: left;
+	}
+
+	div#banner {
+		background: url(http://weather.torproject.org/top-middle.png) repeat-x top left;
+		width: 100%;
+		overflow: auto;
+	}
+
+	div#main-column {
+		padding: 15px 0 10px 5px;
+		text-align: left;
+		clear: both;
+	}
+	
+		h1 {
+			margin-top: 5px;
+			padding-bottom: 10px;
+			border-bottom: 1px solid black;
+		}
+
+		#sign-up-link {
+			font-weight: bold;
+			margin-bottom: 10px;
+			display: block;
+		}
+
+		p {
+			margin: 0 0 12px 0;
+		}
+
+		a {
+			text-decoration: none;
+		}
+
+			a#sign-up-link {
+				font-size: 25px;
+			}
+		 
+			a:hover {
+				text-decoration: underline;
+			}	
+
+		form {
+			font-size: 14px;
+		}
+			
+			form p {
+				margin: 0 0 2px 0;
+			}
+
+			input {
+				clear: both;
+				margin: 2px 5px 3px 0;
+			}
+
+			fieldset {
+				border: none;
+				padding: 0 0 0 0;
+				margin: 0 0 0 0;
+			}
+
+				div.notification-section {
+					margin: 4px 0 4px -2px;
+					padding: 2px 0;
+					overflow: hidden;
+				}
+			
+				#user-info {
+					margin-bottom: 10px;
+				}
+
+				#user-info .field-container {
+					float: left;
+					margin-right: 15px;
+				}
+
+				#user-info label {
+					display: block;
+				}
+
+					#user-info #fingerprint-container label {
+						display: inline;
+					}
+
+					#user-info div#fingerprint-container {
+						margin-right: 0;
+					}
+
+					div#fingerprint-row {
+						padding: 2px 0 0;
+						overflow: hidden;
+						clear: both;
+						position: relative;
+					}
+
+					div#search-container {
+						display: none;
+						width: 350px;
+						position: absolute;
+						bottom: 0px;
+						left: 406px;
+						overflow: hidden;
+					}
+
+					div#search-results {
+						display: none;
+					}
+
+						#search-container label {
+							padding: 0 0 0 36px;
+						}
+
+			.email-input {
+				width: 185px;
+			}
+
+			#router_search {
+				width: 250px;
+			}
+
+			.short-input {
+				width: 150px;
+				float: left;
+			}
+
+				.default-display {
+					color: rgb(150, 150, 150);
+				}
+
+				.nondefault-display {
+					color: black;
+				}
+			
+			.long-input {
+				width: 396px;
+			}
+
+			select {
+				margin: 2px 4px 0 0;
+				float: left;
+			}
+
+			.form-error {
+				margin: 2px 0 1px 0;
+				color: red;
+				display: block;
+			}
+
+				#general-form-error {
+					margin: 0 0 10px 0;
+					font-weight: bold;
+					display: block;
+				}
+
+			.checkbox-input {
+				height: 14px;
+				float: left;
+				margin: 0 4px 0 2px;
+			}
+
+			.after-checkbox label {
+				line-height: 14px;
+				height: 14px;
+				float: left;
+			}
+
+			.extra-options {
+				overflow: hidden;
+				margin-left: 20px;
+				padding: 4px 0 4px 0;
+				clear: both;
+			}	
+
+				.help-text {
+					padding-top: 3px;
+					display: block;
+					color: rgb(100, 100, 100);
+				}
+
+				.extra-options label {
+					display: block;
+				}
+
+				.after-short {
+					padding: 4px 0 0 0;
+					margin: 0 0 0 105px;
+					display: block;
+				}
+
+				.extra-options div {
+					margin: 3px 0 4px 0;
+				}
+
+				.extra-options p {
+					margin: 0 0 0 0;
+				}
+
+				.extra-options ul {
+					list-style-type: none;
+					padding: 0 0 0 0;
+					margin: 0 0 0 0;
+				}
+
+				.extra-options li {
+					margin: 0 0 0 0;
+				}
+
+				.extra-options li input {
+					position: relative;
+					top: 2px;
+					margin: 0 5px 0 5px;
+				}
+
+			#submit-button {
+				font-size: 18px;
+				margin-top: 25px;
+			}
+			
+			#more-info {
+				margin-left: 5px;
+			}
+
+		.footer {
+			padding: 5px 0 0 0;
+			margin: 25px 0 0 0;
+			border-top: 1px solid rgb(100,100,100);
+			color: rgb(100, 100, 100);
+		}
+
+			#weather-legal {
+				font-style: italic;
+				font-size: 14px;
+				margin: 0 0 20px 0;
+			}
+
+			#trademark {
+				text-align: center;
+				font-size: 12px;
+				margin: 0 0 1px 0;
+			}
+
+			#creative-commons {
+				text-align: center;
+				font-size: 12px;
+				margin: 0 0 1px 0;
+			}
+
