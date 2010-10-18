@@ -151,6 +151,12 @@ def confirm(request, confirm_auth):
         # confirm the user's subscription
         user.confirmed = True
         user.save()
+    else:
+        # the user is already confirmed, send to an error page
+        error_url_ext = url_helper.get_error_ext('already_confirmed',    
+                                                 confirm_auth)
+        return HttpResponseRedirect(error_url_ext)
+
 
     if not router.welcomed:
         #We assume that people will only subscribe to relays they are running.
@@ -158,12 +164,6 @@ def confirm(request, confirm_auth):
         #emails to users who are already subscribed.
         router.welcomed = True
         router.save()
-
-    else:
-        # the user is already confirmed, send to an error page
-        error_url_ext = url_helper.get_error_ext('already_confirmed',    
-                                                 confirm_auth)
-        return HttpResponseRedirect(error_url_ext)
 
     # get the urls for the user's unsubscribe and prefs pages to add links
     unsubURL = url_helper.get_unsubscribe_url(user.unsubs_auth)
