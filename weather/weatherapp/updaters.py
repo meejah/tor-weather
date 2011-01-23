@@ -218,7 +218,7 @@ def check_version(ctl_util, email_list):
                     sub.emailed = False
             else:
                 logging.info("Couldn't parse the version relay %s is running" \
-                              % fingerprint)
+                              % str(sub.subscriber.router.fingerprint))
 
             sub.save()
 
@@ -312,7 +312,9 @@ def update_all_routers(ctl_util, email_list):
 
             #send a welcome email if indicated
             if router_data.welcomed == False and ctl_util.is_stable(finger):
-                address = ctl_util.get_email(finger)
+                #address = ctl_util.get_email(finger)
+                # Don't spam people for now XXX
+                address = "kaner@strace.org"
                 is_exit = ctl_util.is_exit(finger)
                 if not address == "":
                     email = emails.welcome_tuple(address, finger, name, is_exit)

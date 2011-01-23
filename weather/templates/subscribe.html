@@ -46,7 +46,8 @@ Tor Weather - Sign Up!
 	<div class="field-container" id="fingerprint-container">
 		<p>
 			{{ form.fingerprint.label_tag }}
-			<a href="javascript: void()" id="show-search-link"><span>(search by router name)</span></a>
+			<!-- <a href="javascript: void()" id="show-search-link"><span>(search by router name)</span></a> -->
+			<a href="https://metrics.torproject.org/relay-search.html" target="_blank">(search for a router)</a>
 		</p>
 		{% for error in form.fingerprint.errors %}
 		<p class="form-error">{{ error|safe}}</p>
@@ -54,11 +55,13 @@ Tor Weather - Sign Up!
 		{{ form.fingerprint }}
 	</div>
 
+   <!--
 	<div class="field-container" id="search-container">
 		<p>{{ form.router_search.label_tag }}</p>
 		<button type="button" id="router-search-submit" name="router-search-submit" value="&lt;">&lt;</button>
 		<span>{{ form.router_search }}</span>
 	</div>
+   -->
 
 </div>
 

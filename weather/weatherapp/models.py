@@ -872,7 +872,7 @@ class GenericForm(forms.Form):
     _BAND_LOW_THRESHOLD_INIT = 20
     _BAND_LOW_THRESHOLD_MIN = 0
     _BAND_LOW_THRESHOLD_MAX = 100000
-    _BAND_LOW_THRESHOLD_LABEL = 'For what citical bandwidth, in kB/s, should \
+    _BAND_LOW_THRESHOLD_LABEL = 'For what critical bandwidth, in kB/s, should \
             we send notifications?'
     _BAND_LOW_THRESHOLD_HELP_TEXT = 'Enter a value between ' + \
             str(_BAND_LOW_THRESHOLD_MIN) + ' and ' + \
@@ -1096,11 +1096,12 @@ class SubscribeForm(GenericForm):
     fingerprint = forms.CharField(label=_FINGERPRINT_LABEL,
             widget=forms.TextInput(attrs={'class':_CLASS_LONG}),
             max_length=_FINGERPRINT_MAX_LEN)
-    router_search = forms.CharField(label=_SEARCH_LABEL,
-            max_length=_SEARCH_MAX_LEN,
-            widget=forms.TextInput(attrs={'id':_SEARCH_ID,                  
-                'autocomplete': 'off'}),
-            required=False)
+# Commented out for now;
+#    router_search = forms.CharField(label=_SEARCH_LABEL,
+#            max_length=_SEARCH_MAX_LEN,
+#            widget=forms.TextInput(attrs={'id':_SEARCH_ID,                  
+#                'autocomplete': 'off'}),
+#            required=False)
 
     def __init__(self, data = None, initial = None):
         if data == None:
@@ -1159,6 +1160,9 @@ class SubscribeForm(GenericForm):
         
         # Removes spaces from fingerprint field.
         fingerprint = re.sub(r' ', '', fingerprint)
+
+        # We store all fingerprints in uppercase
+        fingerprint = fingerprint.upper()
 
         if self.is_valid_router(fingerprint):
             return fingerprint

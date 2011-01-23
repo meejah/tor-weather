@@ -71,7 +71,7 @@ _CONFIRMATION_MAIL = "Dear human,\n\n" +\
 
 _CONFIRMED_SUBJ = 'Confirmation Successful'
 _CONFIRMED_MAIL="Dear human,\n\nThis is the Tor Weather Report "+\
-    "system.You successfully subscribed for Weather Reports about a Tor "+\
+    "system. You successfully subscribed for Weather Reports about a Tor "+\
     "node %s."
 
 _NODE_DOWN_SUBJ = 'Node Down!'
@@ -224,10 +224,8 @@ def send_confirmed(recipient, fingerprint, name, unsubs_auth, pref_auth):
     router = _get_router_name(fingerprint, name)
     subj = _SUBJECT_HEADER + _CONFIRMED_SUBJ
     sender = _SENDER
-    unsubURL = url_helper.get_unsubscribe_url(unsubs_auth)
-    prefURL = url_helper.get_preferences_url(pref_auth)
     msg = _CONFIRMED_MAIL % router
-    msg = _add_generic_footer(msg, unsubURL, prefURL)
+    msg = _add_generic_footer(msg, unsubs_auth, pref_auth)
     send_mail(subj, msg, sender, [recipient], fail_silently=False)
 
 def bandwidth_tuple(recipient, fingerprint, name,  observed, threshold,
@@ -250,11 +248,9 @@ def bandwidth_tuple(recipient, fingerprint, name,  observed, threshold,
     router = _get_router_name(fingerprint, name)
     subj = _SUBJECT_HEADER + _LOW_BANDWIDTH_SUBJ
     sender = _SENDER
-    unsubURL = url_helper.get_unsubscribe_url(unsubs_auth)
-    prefURL = url_helper.get_preferences_url(pref_auth)
 
     msg = _LOW_BANDWIDTH_MAIL % (router, observed, threshold)
-    msg = _add_generic_footer(msg, unsubURL, prefURL)
+    msg = _add_generic_footer(msg, unsubs_auth, pref_auth)
 
     return (subj, msg, sender, [recipient])
 
@@ -282,10 +278,8 @@ def node_down_tuple(recipient, fingerprint, name, grace_pd, unsubs_auth,
     num_hours = str(grace_pd) + " hour"
     if grace_pd > 1:
         num_hours += "s"
-    unsubURL = url_helper.get_unsubscribe_url(unsubs_auth)
-    prefURL = url_helper.get_preferences_url(pref_auth)
     msg = _NODE_DOWN_MAIL % (router, num_hours)
-    msg = _add_generic_footer(msg, unsubURL, prefURL)
+    msg = _add_generic_footer(msg, unsubs_auth, pref_auth)
     return (subj, msg, sender, [recipient])
 
 def t_shirt_tuple(recipient, fingerprint, name, avg_bandwidth, 
@@ -319,11 +313,9 @@ def t_shirt_tuple(recipient, fingerprint, name, avg_bandwidth,
     avg_bandwidth = avg_bandwidth
     subj = _SUBJECT_HEADER + _T_SHIRT_SUBJ
     sender = _SENDER
-    unsubURL = url_helper.get_unsubscribe_url(unsubs_auth)
-    prefURL = url_helper.get_preferences_url(pref_auth)
     msg = _T_SHIRT_MAIL % (router, stable_message, days_running, 
                            avg_bandwidth)
-    msg = _add_generic_footer(msg, unsubURL, prefURL)
+    msg = _add_generic_footer(msg, unsubs_auth, pref_auth)
     return (subj, msg, sender, [recipient])
 
 def welcome_tuple(recipient, fingerprint, name, exit):
@@ -374,10 +366,8 @@ def version_tuple(recipient, fingerprint, name, version_type, unsubs_auth,
     subj = _SUBJECT_HEADER + _VERSION_SUBJ
     sender = _SENDER
     version_type = version_type.lower()
-    unsubURL = url_helper.get_unsubscribe_url(unsubs_auth)
-    prefURL = url_helper.get_preferences_url(pref_auth)
     downloadURL = url_helper.get_download_url()
     msg = _VERSION_MAIL % (router, version_type, downloadURL)
-    msg = _add_generic_footer(msg, unsubURL, prefURL)
+    msg = _add_generic_footer(msg, unsubs_auth, pref_auth)
                            
     return (subj, msg, sender, [recipient])
