@@ -40,6 +40,42 @@ We recommend deploying Django with Apache and mod_wsgi.
 
        WSGIScriptAlias / /home/weather/opt/tor-weather/weather/weather.wsgi
 
+       $ cat apache.conf
+       # this is the apache config from /srv/weather.torproject.org/etc/apache.conf
+       #
+       # run sudo apache2-vhost-update weather.torproject.org after editing this file
+
+       <VirtualHost *:80>
+               ServerName weather.torproject.org
+
+               ErrorLog  /var/log/apache2/weather2.torproject.org-error.log
+               CustomLog /var/log/apache2/weather2.torproject.org-access.log privacy
+
+               WSGIScriptAlias / /home/weather/opt/weather2/weather/weather.wsgi
+
+               RewriteEngine On
+               RewriteRule ^(.*)$ https://%{SERVER_NAME}$1 [L,R]
+       </VirtualHost>
+
+       <VirtualHost *:443>
+               SSLEngine on
+               SSLCertificateFile    /etc/ssl/certs/wildcard.torproject.org.pem
+               SSLCertificateKeyFile /etc/ssl/private/wildcard.torproject.org.key
+
+               ServerName weather.torproject.org
+
+               AliasMatch ^/([^/]*\.png) /home/weather/opt/weather2/weather/media/$1
+               AliasMatch ^/([^/]*\.css) /home/weather/opt/weather2/weather/media/$1
+               AliasMatch ^/([^/]*\.js) /home/weather/opt/weather2/weather/media/$1
+               Alias /media/ /home/weather/opt/weather2/weather/media/
+
+
+               ErrorLog  /var/log/apache2/weather2.torproject.org-error.log
+               CustomLog /var/log/apache2/weather2.torproject.org-access.log privacy
+
+               WSGIScriptAlias / /home/weather/opt/weather2/weather/weather.wsgi
+       </VirtualHost>
+
      - Reload the Apache configuration
 
 8) Once the application is deployed, the listener application should be run from
