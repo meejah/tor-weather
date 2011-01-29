@@ -100,7 +100,7 @@ _T_SHIRT_MAIL = "This is a Tor Weather Report.\n\n"+\
     "which makes the operator eligible to receive an official Tor "+\
     "T-shirt! If you're interested in claiming your shirt, please visit "+\
     "the following link for more information.\n\n"+\
-    "http://www.torproject.org/tshirt.html"+\
+    "https://www.torproject.org/getinvolved/tshirt.html"+\
     "\n\nYou might want to include this message in your email. "+\
     "Thank you for your contribution to the Tor network!"
     

@@ -33,7 +33,7 @@ _RESEND_CONF = '/resend_conf/%s/'
 _SUBSCRIBE = '/subscribe/'
 _UNSUBSCRIBE = '/unsubscribe/%s/'
 _DOWNLOAD = 'https://www.torproject.org/easy-download.html'
-_T_SHIRT = 'https://www.torproject.org/tshirt.html.en'
+_T_SHIRT = 'https://www.torproject.org/getinvolved/tshirt.html'
 
 def get_confirm_url(confirm_auth):
     """Returns a string representation of the full url for the confirmation 
