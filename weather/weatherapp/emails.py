@@ -76,7 +76,7 @@ _CONFIRMED_MAIL="Dear human,\n\nThis is the Tor Weather Report "+\
 
 _NODE_DOWN_SUBJ = 'Node Down!'
 _NODE_DOWN_MAIL = "This is a Tor Weather Report.\n\n" +\
-    "It appears that the node %s you've been observing" +\
+    "It appears that the node %s you've been observing " +\
     "has been uncontactable through the Tor network for at least %s. "+\
     "You may wish to look at it to see why."
 
