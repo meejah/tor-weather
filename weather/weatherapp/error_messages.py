@@ -24,8 +24,7 @@ _ALREADY_CONFIRMED = "<p>You have already confirmed your Tor Weather " +\
     "<p>You can unsubscribe at any time here:" +\
     "<br><a href=%s>%s</a></p>"
 _ALREADY_SUBSCRIBED = "<p>You are already subscribed to receive email " +\
-    "alerts about the node you specified.</p><p>If you'd like, you can " +\
-    " <a href = '%s'>change your preferences here</a>.</p>"
+    "alerts about the node you specified.</p>"
 _NEED_CONFIRMATION ="<p>You have not yet confirmed your subscription to Tor "+\
     "Weather. You should have received an email at %s from Tor Weather "+\
     "with a link to your confirmation page.</p><p>If you would like us "+\
@@ -56,10 +55,7 @@ def get_error_message(error_type, key):
                                                       unsubscribe_url)
         return message
     elif error_type == 'already_subscribed':
-        # the key represents the user's pref_auth key
-        pref_auth = key
-        pref_ext = url_helper.get_preferences_ext(pref_auth)
-        message = _ALREADY_SUBSCRIBED % pref_ext
+        message = _ALREADY_SUBSCRIBED
         return message
     elif error_type == 'need_confirmation':
         # the key represents the user's confirm_auth key
