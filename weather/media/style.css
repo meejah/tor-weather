@@ -13,6 +13,7 @@ div#center {
 
 	#banner a img {
 		float: left;
+      border: 0;
 	}
 
 	div#banner {
