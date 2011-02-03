@@ -87,7 +87,7 @@ _VERSION_MAIL = "This is a Tor Weather Report.\n\n"+\
     "latest version of Tor at %s."
 
 _LOW_BANDWIDTH_SUBJ = 'Low bandwidth!'
-_LOW_BANDWIDTH_MAIL = "The is a Tor Weather Report.\n\n"+\
+_LOW_BANDWIDTH_MAIL = "This is a Tor Weather Report.\n\n"+\
     "It appears that the tor node %s you've been observing "+\
     "has an observed bandwidth capacity of %s kB/s. You elected to receive "+\
     "notifications if this node's bandwidth capacity passed a threshold of "+\
@@ -110,7 +110,7 @@ _WELCOME_MAIL = "Hello and welcome to Tor!\n\n" +\
     "enough to be "+\
     "flagged as \"stable\". First, we would like to thank you for your "+\
     "contribution to the Tor network! As Tor grows, we require ever more "+\
-    "nodes to optomize browsing speed and reliability for our users. "+\
+    "nodes to improve browsing speed and reliability for our users. "+\
     "Your node is helping to serve the millions of Tor clients out there."+\
     "\n\nAs a node operator, you may be interested in the Tor Weather "+\
     "service, which sends important email notifications when a node is "\
@@ -131,9 +131,9 @@ _WELCOME_MAIL = "Hello and welcome to Tor!\n\n" +\
 
 _LEGAL_INFO = "Additionally, since you are running as an exit node, you " +\
     "might be interested in Tor's Legal FAQ for Relay Operators "+\
-    "(http://www.torproject.org/eff/tor-legal-faq.html.en) " +\
+    "(https://www.torproject.org/eff/tor-legal-faq.html.en) " +\
     "and Mike Perry's blog post on running an exit node " +\
-    "(http://blog.torproject.org/blog/tips-running-exit-node-minimal-"+\
+    "(https://blog.torproject.org/blog/tips-running-exit-node-minimal-"+\
     "harassment).\n\n"
 
 _GENERIC_FOOTER = "\n\nYou can unsubscribe from these reports at any time "+\
