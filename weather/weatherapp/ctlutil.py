@@ -19,6 +19,22 @@ debugfile = open('log/debug', 'w')
 #for unparsable emails
 unparsable_email_file = 'log/unparsable_emails.txt'
 
+# Match fingerprint regex
+# Fingerprint lines in the descriptors can be
+# a) opt fingerprint ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD
+# b) fingerprint ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD
+match_fingerprint = "^(opt\ )?fingerprint ([0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4})$"
+
+# Match router regex
+# Router names can be between 1 and 19 alphanumeric characters ([A-Za-z0-9])
+match_router = "^router\ ([A-Za-z0-9]{0,19})\ .*$"
+
+# Match hibernating regex
+# Hibernating indicator lines can be
+# a) opt hibernating 1
+# b) hibernating 1
+match_hibernating = "^(opt\ )?hibernating 1$"
+
 class CtlUtil:
     """A class that handles communication with the local Tor process via
     TorCtl.
@@ -348,13 +364,13 @@ class CtlUtil:
                 
             # Loop through each line in the descriptor.
             for line in desc_lines:
-                if line.startswith("opt fingerprint"):
-                    # Eliminate 'opt fingerprint' and spaces from line
-                    finger = line.replace('opt fingerprint', '')
+                match = re.match(match_fingerprint, line)
+                if match:
+                    finger = match.group(2)
                     finger = finger.replace(' ', '')
-                if line.startswith("router "):
-                    # Router name is positioned as second word
-                    name = line.split()[1]
+                match = re.match(match_router, line)
+                if match:
+                    name = match.group(1)
 
             # We ignore routers that don't publish their fingerprints
             if not finger == "":
@@ -451,8 +467,8 @@ class CtlUtil:
 
         desc = self.get_single_descriptor(fingerprint)
         if not desc == "":
-            hib_search = re.search('opt hibernating 1', desc)
-            if not hib_search == None:
+            match = re.match(hibernating_match, desc)
+            if match:
                 return True
             else:
                 return False
