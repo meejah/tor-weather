@@ -10,7 +10,7 @@ Configuration settings.
 """
 
 # XXX: Make bulletproof
-authenticator = open("/home/weather/opt/tor-weather/weather/config/auth_token", "r").read().strip()
+authenticator = open("/home/weather/opt/current/weather/config/auth_token", "r").read().strip()
 
 #The Tor control port to use
 control_port = 9051

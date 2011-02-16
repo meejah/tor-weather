@@ -1096,12 +1096,11 @@ class SubscribeForm(GenericForm):
     fingerprint = forms.CharField(label=_FINGERPRINT_LABEL,
             widget=forms.TextInput(attrs={'class':_CLASS_LONG}),
             max_length=_FINGERPRINT_MAX_LEN)
-# Commented out for now;
-#    router_search = forms.CharField(label=_SEARCH_LABEL,
-#            max_length=_SEARCH_MAX_LEN,
-#            widget=forms.TextInput(attrs={'id':_SEARCH_ID,                  
-#                'autocomplete': 'off'}),
-#            required=False)
+    router_search = forms.CharField(label=_SEARCH_LABEL,
+            max_length=_SEARCH_MAX_LEN,
+            widget=forms.TextInput(attrs={'id':_SEARCH_ID,                  
+                'autocomplete': 'off'}),
+            required=False)
 
     def __init__(self, data = None, initial = None):
         if data == None:

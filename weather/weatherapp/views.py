@@ -53,6 +53,7 @@ def subscribe(request):
 
                 # Spawn a daemon to send the confirmation email.
                 confirm_auth = subscriber.confirm_auth
+		unsubs_auth = subscriber.unsubs_auth
                 addr = subscriber.email
                 fingerprint = subscriber.router.fingerprint
                 name = subscriber.router.name
@@ -62,7 +63,8 @@ def subscribe(request):
                 email_thread.start()
         
                 # Redirect the user to the pending page.
-                url_extension = url_helper.get_pending_ext(confirm_auth)
+                #url_extension = url_helper.get_pending_ext(confirm_auth)
+                url_extension = url_helper.get_pending_ext(unsubs_auth)
                 return HttpResponseRedirect(url_extension)
     
     c = {'form' : form}
@@ -128,7 +130,9 @@ def pending(request, confirm_auth):
     @type confirm_auth: str
     @param confirm_auth: The user's confirmation authorization key.
     """
-    user = get_object_or_404(Subscriber, confirm_auth=confirm_auth)
+    # Prevent leaking the confirm_auth string to the user in the URL, therefore
+    # use `unsubs_auth' here, not confirm_auth.
+    user = get_object_or_404(Subscriber, unsubs_auth=confirm_auth)
 
     if not user.confirmed:
         return render_to_response(templates.pending, {'email': user.email})

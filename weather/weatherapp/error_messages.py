@@ -55,6 +55,7 @@ def get_error_message(error_type, key):
                                                       unsubscribe_url)
         return message
     elif error_type == 'already_subscribed':
+        # the key represents the user's pref_auth key
         message = _ALREADY_SUBSCRIBED
         return message
     elif error_type == 'need_confirmation':
