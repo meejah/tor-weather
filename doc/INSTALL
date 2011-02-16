@@ -1,11 +1,9 @@
-0) Make sure a Tor instance is running somewhere with control port enabled. In
+1) Make sure a Tor instance is running somewhere with control port enabled. In
    addition to the control port, make sure to set the following configuration
    values in your torrc file:
 
         FetchDirInfoEarly 1
         FetchUselessDescriptors 1 
-
-1) In weather, make a directory named "log".
 
 2) In weather/settings.py, change the EMAIL_* fields to reflect your SMTP 
    configurations and the email address for sending the Tor Weather 
@@ -18,6 +16,10 @@
 4) A copy of (or link to) the TorCtl package must be located within the weather
    directory.
 
+   $ svn co https://svn.torproject.org/svn/torctl/branches/stable/python/TorCtl
+   $ cd current/weather
+   $ ln -s ../../TorCtl .
+
 5) Create a file named auth_token inside the weather.config directory and 
    insert your Tor hashed control password in plain text. The file should 
    otherwise be empty.
@@ -25,15 +27,15 @@
 6) Create the database by running the following command from within the weather
    directory:
 	            
-        $ python manage.py syncdb
+   $ python manage.py syncdb
 
    Ensure that the directory *and* database is writeable by the web server 
    after running this. For instance, you may need to run:
 
-        $ chown weather.www-run ../var/WeatherDB
-        $ chown weather.www-run ../var
-        $ chmod 664 ../var/WeatherDB
-        $ chmod 775 ../var
+   $ chown weather.www-run ../var/WeatherDB
+   $ chown weather.www-run ../var
+   $ chmod 664 ../var/WeatherDB
+   $ chmod 775 ../var
 
 7) Look here for documentation concerning how to deploy the Django web 
    application:
@@ -44,13 +46,13 @@
 
 7a) How to deploy weather using Apache and mod_wsgi:
 
-    - $ cat > /home/weather/opt/tor-weather//weather/weather.wsgi << EOF
+    - $ cat > /home/weather/opt/current/weather/weather.wsgi << EOF
         import os
         import sys
 
-        sys.path.append('/home/weather/opt/tor-weather')
-        sys.path.append('/home/weather/opt/tor-weather/weather')
-        sys.path.append('/home/weather/opt/tor-weather/weather/weatherapp')
+        sys.path.append('/home/weather/opt/current')
+        sys.path.append('/home/weather/opt/current/weather')
+        sys.path.append('/home/weather/opt/current/weather/weatherapp')
         os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
         import django.core.handlers.wsgi
@@ -58,7 +60,7 @@
         EOF
      - Add the following line to your Apache configuration:
 
-       WSGIScriptAlias / /home/weather/opt/tor-weather/weather/weather.wsgi
+       WSGIScriptAlias / /home/weather/opt/current/weather/weather.wsgi
 
        $ cat apache.conf
        # this is the apache config 
@@ -72,7 +74,7 @@
                ErrorLog  /var/log/apache2/weather2.torproject.org-error.log
                CustomLog /var/log/apache2/weather2.torproject.org-access.log privacy
 
-               WSGIScriptAlias / /home/weather/opt/weather2/weather/weather.wsgi
+               WSGIScriptAlias / /home/weather/opt/current/weather/weather.wsgi
 
                RewriteEngine On
                RewriteRule ^(.*)$ https://%{SERVER_NAME}$1 [L,R]
@@ -85,16 +87,16 @@
 
                ServerName weather.torproject.org
 
-               AliasMatch ^/([^/]*\.png) /home/weather/opt/weather2/weather/media/$1
-               AliasMatch ^/([^/]*\.css) /home/weather/opt/weather2/weather/media/$1
-               AliasMatch ^/([^/]*\.js) /home/weather/opt/weather2/weather/media/$1
-               Alias /media/ /home/weather/opt/weather2/weather/media/
+               AliasMatch ^/([^/]*\.png) /home/weather/opt/current/weather/media/$1
+               AliasMatch ^/([^/]*\.css) /home/weather/opt/current/weather/media/$1
+               AliasMatch ^/([^/]*\.js) /home/weather/opt/current/weather/media/$1
+               Alias /media/ /home/weather/opt/current/weather/media/
 
 
                ErrorLog  /var/log/apache2/weather2.torproject.org-error.log
                CustomLog /var/log/apache2/weather2.torproject.org-access.log privacy
 
-               WSGIScriptAlias / /home/weather/opt/weather2/weather/weather.wsgi
+               WSGIScriptAlias / /home/weather/opt/current/weather/weather.wsgi
        </VirtualHost>
 
      - Reload the Apache configuration
@@ -103,6 +105,14 @@
    from inside the weather directory:
 
 	    $ python manage.py runlistener
+
+   Or, more conveniently, add a cronjob for @reboot as follows:
+
+   @reboot /sbin/start-stop-daemon \
+       --start \
+       --background \
+       --chdir "/home/weather/opt/current/weather" \
+       --exec /usr/bin/python manage.py runlistener
 
    The listener waits for consensus events from your local TorCtl process, then
    updates the database and sends notifications.
