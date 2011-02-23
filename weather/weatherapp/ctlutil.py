@@ -467,7 +467,7 @@ class CtlUtil:
 
         desc = self.get_single_descriptor(fingerprint)
         if not desc == "":
-            match = re.match(hibernating_match, desc)
+            match = re.match(match_hibernating, desc)
             if match:
                 return True
             else:
