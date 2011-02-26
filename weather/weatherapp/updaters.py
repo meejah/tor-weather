@@ -315,7 +315,7 @@ def update_all_routers(ctl_util, email_list):
                 # Don't spam people for now XXX
                 #recipient = "kaner@strace.org"
                 is_exit = ctl_util.is_exit(finger)
-                if not address == "":
+                if not recipient == "":
                     email = emails.welcome_tuple(recipient, finger, name, is_exit)
                     email_list.append(email)
                 router_data.welcomed = True
