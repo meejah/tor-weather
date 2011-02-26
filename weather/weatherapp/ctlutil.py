@@ -284,6 +284,10 @@ class CtlUtil:
             version_list.append(client_version)
             if get_highest_version(version_list) is client_version:
                 return 'RECOMMENDED'
+            # If 0.2.1.34 is stable, that means 0.2.1.34-dev is fine, too.
+            nondev_name = client_version.replace("-dev", "")
+            if nondev_name in version_list:
+                return 'RECOMMENDED'
 
         return 'OBSOLETE'
 
