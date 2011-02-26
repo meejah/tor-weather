@@ -272,7 +272,7 @@ class CtlUtil:
         # Special case when the dirauth can't agree on recommended versions,
         # the list is empty. In that case we play along as if everything was 
         # fine
-        if len(version_list) is 0:
+        if len(version_list) == 0:
             return 'RECOMMENDED'
 
         if client_version in version_list:
@@ -282,7 +282,7 @@ class CtlUtil:
         # in the `recommended' list
         if client_version.endswith("-dev"):
             version_list.append(client_version)
-            if get_highest_version(version_list) is client_version:
+            if get_highest_version(version_list) == client_version:
                 return 'RECOMMENDED'
             # If 0.2.1.34 is stable, that means 0.2.1.34-dev is fine, too.
             nondev_name = client_version.replace("-dev", "")
