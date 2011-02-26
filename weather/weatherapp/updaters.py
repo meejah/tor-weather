@@ -195,8 +195,7 @@ def check_version(ctl_util, email_list):
                            str(sub.subscriber.router.fingerprint))
 
             if version_type != 'ERROR':
-                if (version_type == 'OBSOLETE' or sub.notify_type == \
-                    version_type): 
+                if (version_type == 'OBSOLETE'):
                     if sub.emailed == False:
                 
                         fingerprint = sub.subscriber.router.fingerprint
@@ -312,12 +311,12 @@ def update_all_routers(ctl_util, email_list):
 
             #send a welcome email if indicated
             if router_data.welcomed == False and ctl_util.is_stable(finger):
-                address = ctl_util.get_email(finger)
+                recipient = ctl_util.get_email(finger)
                 # Don't spam people for now XXX
-                #address = "kaner@strace.org"
+                #recipient = "kaner@strace.org"
                 is_exit = ctl_util.is_exit(finger)
                 if not address == "":
-                    email = emails.welcome_tuple(address, finger, name, is_exit)
+                    email = emails.welcome_tuple(recipient, finger, name, is_exit)
                     email_list.append(email)
                 router_data.welcomed = True
 

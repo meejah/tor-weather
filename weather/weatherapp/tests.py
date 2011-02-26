@@ -96,7 +96,7 @@ class TestWeb(TestCase):
                                           'get_node_down' : False,
                                           'node_down_grace_pd' : '',
                                           'get_version' : True,
-                                          'version_type' : 'UNRECOMMENDED',
+                                          'version_type' : 'OBSOLETE',
                                           'get_band_low': False,
                                           'band_low_threshold' : '',
                                           'get_t_shirt' : False},
@@ -118,7 +118,7 @@ class TestWeb(TestCase):
         #Verify that the subscription info was stored correctly
         version_sub = VersionSub.objects.get(subscriber = subscriber)
         self.assertEqual(version_sub.emailed, False)
-        self.assertEqual(version_sub.notify_type, 'UNRECOMMENDED')
+        self.assertEqual(version_sub.notify_type, 'OBSOLETE')
 
         #Test that one message has been sent
         for i in range(0, 100, 1):
@@ -218,7 +218,7 @@ class TestWeb(TestCase):
                                           'get_node_down' : False,
                                           'node_down_grace_pd' : 1,
                                           'get_version' : False,
-                                          'version_type' : 'UNRECOMMENDED',
+                                          'version_type' : 'OBSOLETE',
                                           'get_band_low' : False,
                                           'band_low_threshold' : '',
                                           'get_t_shirt' : True},
@@ -285,7 +285,7 @@ class TestWeb(TestCase):
                                           'get_node_down' : True,
                                           'node_down_grace_pd' : '',
                                           'get_version' : True,
-                                          'version_type' : 'UNRECOMMENDED',
+                                          'version_type' : 'OBSOLETE',
                                           'get_band_low': True,
                                           'band_low_threshold' : '',
                                           'get_t_shirt' : True},
@@ -312,7 +312,7 @@ class TestWeb(TestCase):
         
         version = VersionSub.objects.get(subscriber = subscriber)
         self.assertEqual(version.emailed, False)
-        self.assertEqual(version.notify_type, 'UNRECOMMENDED')
+        self.assertEqual(version.notify_type, 'OBSOLETE')
 
         bandwidth = BandwidthSub.objects.get(subscriber = subscriber)
         self.assertEqual(bandwidth.emailed, False)
@@ -364,7 +364,7 @@ class TestWeb(TestCase):
                                           'get_node_down' : True,
                                           'node_down_grace_pd' : '',
                                           'get_version' : True,
-                                          'version_type' : 'UNRECOMMENDED',
+                                          'version_type' : 'OBSOLETE',
                                           'get_band_low': True,
                                           'band_low_threshold' : '',
                                           'get_t_shirt' : True},

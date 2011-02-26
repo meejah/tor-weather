@@ -232,6 +232,14 @@ class CtlUtil:
             return search.group().split()[2].replace(' ', '')
         else:
             return ''
+
+    def get_highest_version(self, versionlist):
+        """Return the highest Tor version from a list of versions.
+        """
+        if len(versionlist) is 0:
+            return ""
+        versionlist.sort()
+        return versionlist[-1]
         
     def get_version_type(self, fingerprint):
         """Get the type of version the relay with fingerprint C{fingerprint}
@@ -242,13 +250,18 @@ class CtlUtil:
 
         @rtype: str
         @return: The type of version of Tor the client is running, where the
-        types are RECOMMENDED, OBSOLETE, and UNRECOMMENDED. Returns RECOMMENDED
-        if the relay is running the most recent stable release or a more     
-        recent unstable release , UNRECOMMENDED
-        if it is running an older version than the most recent stable release
-        that is contained in the list returned by C{get_rec_version_list()},
-        and OBSOLETE if the version isn't on the list. If the relay's version
-        cannot be determined, return ERROR.
+        types are RECOMMENDED or OBSOLETE. 
+
+        Returns RECOMMENDED if the relay is running a version that is found 
+        in the `recommended' versions list or if the version is a more recent 
+        dev version than the most recent recommended dev version. (Basically, 
+        we don't want to bother people for being nice and testing new versions 
+        for us) 
+        There is one more special case where we return RECOMMENDED and that is 
+        when there is *no* recommended version currently known.
+
+        We return OBSOLETE if neither of the above criteria matches.
+        If the version cannot be determined, return ERROR.
         """
         version_list = self.get_rec_version_list()
         client_version = self.get_version(fingerprint)
@@ -256,30 +269,23 @@ class CtlUtil:
         if client_version == '':
             return 'ERROR'
 
-        current_stable_index = -1
-        for version in version_list:
-            if 'alpha' in version or 'beta' in version:
-                current_stable_index = version_list.index(version) - 1
-                break
-        
-        #if the client has one of these versions, return RECOMMENDED
-        rec_list = version_list[current_stable_index:]
-        
-        #if the client has one of these, return UNRECOMMENDED
-        unrec_list = version_list[:current_stable_index]
+        # Special case when the dirauth can't agree on recommended versions,
+        # the list is empty. In that case we play along as if everything was 
+        # fine
+        if len(version_list) is 0:
+            return 'RECOMMENDED'
 
-        for version in rec_list:
-            if client_version == version:
+        if client_version in version_list:
+            return 'RECOMMENDED'
+
+        # Check if the user is running a more recent dev version than is found
+        # in the `recommended' list
+        if client_version.endswith("-dev"):
+            version_list.append(client_version)
+            if get_highest_version(version_list) is client_version:
                 return 'RECOMMENDED'
-        
-        for version in unrec_list:
-            if client_version == version:
-                return 'UNRECOMMENDED'
 
-        #the client doesn't have a RECOMMENDED or UNRECOMMENDED version,
-        #so it must be OBSOLETE
         return 'OBSOLETE'
-
 
     def has_rec_version(self, fingerprint):
         """Check if a Tor relay is running a recommended version of the Tor

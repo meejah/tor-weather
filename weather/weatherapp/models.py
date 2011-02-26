@@ -370,7 +370,7 @@ class Subscriber(models.Model):
             v = VersionSub.objects.get(subscriber = self)
             data['version_type'] = v.notify_type
         else:
-            data['version_type'] = u'UNRECOMMENDED'
+            data['version_type'] = u'OBSOLETE'
 
         data['get_band_low'] = self.has_bandwidth_sub()
         if data['get_band_low']:
@@ -474,9 +474,7 @@ class VersionSub(Subscription):
     notifications to their C{subscriber} if the C{subscriber}'s C{router} is
     running a version of Tor that is out-of-date. OBSOLETE notifications are
     triggered if the C{router}'s version of Tor is not in the list of 
-    recommended versions (obtained via TorCtl), and UNRECOMMENDED notifications
-    are triggered if the C{router}'s version fo Tor is not the most recent 
-    stable (non-alpha/beta) version of Tor in the list of recommended versions.
+    recommended versions (obtained via TorCtl), with a few exceptions.
     Django uses class variables to specify model fields, but these fields
     are practically used and thought of as instance variables, so this
     documentation will refer to them as such. Field types are specified as 
@@ -487,7 +485,7 @@ class VersionSub(Subscription):
     @cvar _NOTIFY_TYPE_MAX_LEN: Maximum length for L{notify_type} field.
     
     @type notify_type: CharField (str)
-    @ivar notify_type: The type of notification, either 'UNRECOMMENDED' or 
+    @ivar notify_type: The type of notification, currently can only be 
         'OBSOLETE'. Required constructor argument.
     """
 
@@ -742,25 +740,10 @@ class GenericForm(forms.Form):
     @type _GET_VERSION_INIT: bool
     @cvar _GET_VERSION_INIT: Initial display value and default submission 
         value of the L{get_version} checkbox.
-    @type _GET_VERSION_LABEL: str
-    @cvar _GET_VERSION_LABEL: Text displayed next to L{get_version} checkbox.
-    @type _VERSION_TYPE_CHOICE_1: str
-    @cvar _VERSION_TYPE_CHOICE_1: Backend name for the first choice of the
-        L{version_type} field.
-    @type _VERSION_TYPE_CHOICE_1_H: str
-    @cvar _VERSION_TYPE_CHOICE_1_H: Frontend (human readable) name for the
-        first choice of the L{version_type} field.
-    @type _VERSION_TYPE_CHOICE_2: str
-    @cvar _VERSION_TYPE_CHOICE_2: Backend name for the second choice of the 
-        L{version_type} field.
-    @type _VERSION_TYPE_CHOICE_2_H: str
-    @cvar _VERSION_TYPE_CHOICE_2_H: Frontend (human readable) name for the
-        second choice of the L{version_type} field.
-    @type _VERSION_TYPE_CHOICES: list [tuple (str)]
-    @cvar _VERSION_TYPE_CHOICES: List of tuples of backend and frontend names
-        for each choice of the L{version_type} field.
     @type _VERSION_TYPE_INIT: str
     @cvar _VERSION_TYPE_INIT: Initial tuple for the L{version_type} field.
+    @type _GET_VERSION_LABEL: str
+    @cvar _GET_VERSION_LABEL: Text displayed next to L{get_version} checkbox.
     @type _VERSION_SECTION_INFO: str
     @cvar _VERSION_SECTION_INFO: Text explaining the version subscription,
         displayed in the expandable version section of the form, with HTML
@@ -823,9 +806,6 @@ class GenericForm(forms.Form):
     @type get_version: BooleanField
     @ivar get_version: Checkbox letting users choose to subscribe to a 
         L{VersionSub}.
-    @type version_type: ChoiceField
-    @ivar version_type: Radio button list letting users choose the type of
-        L{VersionSub} to subscribe to.
     
     @type get_band_low: BooleanField
     @ivar get_band_low: Checkbox letting users choose to subscribe to a
@@ -854,18 +834,10 @@ class GenericForm(forms.Form):
     _NODE_DOWN_GRACE_PD_UNIT_INIT = ('H', 'hours')
     
     _GET_VERSION_INIT = False
+    _VERSION_TYPE_INIT = "OBSOLETE"
     _GET_VERSION_LABEL = 'Email me when the router\'s Tor version is out of date'
-    _VERSION_TYPE_CHOICE_1 = 'UNRECOMMENDED'
-    _VERSION_TYPE_CHOICE_1_H = 'Recommended Updates'
-    _VERSION_TYPE_CHOICE_2 = 'OBSOLETE'
-    _VERSION_TYPE_CHOICE_2_H = 'Required Updates'
-    _VERSION_TYPE_CHOICES = [ ('UNRECOMMENDED', 'Recommended Updates'),
-                              ('OBSOLETE', 'Required Updates') ]
-    _VERSION_TYPE_INIT = 'UNRECOMMENDED'
-    _VERSION_SECTION_INFO = '<p><em>Recommended Updates:</em>  Emails when\
-    the router is not running the most up-to-date stable version of Tor.</p> \
-    <p><em>Required Updates:</em>  Emails when the router is running \
-    an obsolete version of Tor.</p>'
+    _VERSION_SECTION_INFO = 'Emails when\
+    the router is not running a recommended version of Tor.'
 
     _GET_BAND_LOW_INIT = False
     _GET_BAND_LOW_LABEL = 'Email me when the router has low bandwidth capacity'
@@ -914,9 +886,6 @@ class GenericForm(forms.Form):
     get_version = forms.BooleanField(required=False,
             label=_GET_VERSION_LABEL,
             widget=forms.CheckboxInput(attrs={'class':_CLASS_CHECK}))
-    version_type = forms.ChoiceField(required=True,
-            choices=(_VERSION_TYPE_CHOICES),
-            widget=forms.RadioSelect(attrs={'class':_CLASS_RADIO}))
     
     get_band_low = forms.BooleanField(required=False,
             label=_GET_BAND_LOW_LABEL,
@@ -976,9 +945,6 @@ class GenericForm(forms.Form):
         if 'node_down_grace_pd' in errors and not data['get_node_down']:
             del errors['node_down_grace_pd']
             data['node_down_grace_pd'] = GenericForm._NODE_DOWN_GRACE_PD_INIT
-        if 'version_type' in errors and not data['get_version']:
-            del errors['version_type']
-            data['version_type'] = GenericForm._VERSION_TYPE_INIT
         if 'band_low_threshold' in errors and not data['get_band_low']:
             del errors['band_low_threshold']
             data['band_low_threshold'] = GenericForm._BAND_LOW_THRESHOLD_INIT
@@ -1230,8 +1196,7 @@ class SubscribeForm(GenericForm):
                     grace_pd=self.cleaned_data['node_down_grace_pd'])
             node_down_sub.save()
         if self.cleaned_data['get_version']:
-            version_sub = VersionSub(subscriber=subscriber,
-                    notify_type = self.cleaned_data['version_type'])
+            version_sub = VersionSub(subscriber=subscriber)
             version_sub.save()
         if self.cleaned_data['get_band_low']:
             band_low_sub = BandwidthSub(subscriber=subscriber,
@@ -1325,16 +1290,12 @@ class PreferencesForm(GenericForm):
         # it depending on the current value.
         if old_data['get_version']:
             v = VersionSub.objects.get(subscriber = self.user)
-            if new_data['get_version']:
-                v.notify_type = new_data['version_type']
-                v.save()
-            else:
+            if not new_data['get_version']:
                 v.delete()
         # If there wasn't a subscription before and it is checked now, then 
         # make one.
         elif new_data['get_version']:
-            v = VersionSub(subscriber=self.user, 
-                    notify_type=new_data['version_type'])
+            v = VersionSub(subscriber=self.user)
             v.save()
 
         # If there already was a subscription, get it and update it or delete

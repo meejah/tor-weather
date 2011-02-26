@@ -354,8 +354,7 @@ def version_tuple(recipient, fingerprint, name, version_type, unsubs_auth,
     @param fingerprint: The fingerprint for the router this user is subscribed
                         to.
     @type version_type: str
-    @param version_type: Either 'UNRECOMMENDED' or 'OBSOLETE', depending on the
-        user's preferences for this notification type.
+    @param version_type: Currently can only be 'OBSOLETE'
 
     @rtype: tuple
     @return: A tuple containing information about the email to be sent in
