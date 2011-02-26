@@ -492,7 +492,7 @@ class VersionSub(Subscription):
     _NOTIFY_TYPE_MAX_LEN = 13
 
     notify_type = models.CharField(max_length=_NOTIFY_TYPE_MAX_LEN,
-            default=None, blank=False)
+            default='OBSOLETE', blank=False)
 
 class BandwidthSub(Subscription):   
     """Model for low bandwidth notification subscriptions, which send
