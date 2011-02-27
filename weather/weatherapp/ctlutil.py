@@ -238,8 +238,14 @@ class CtlUtil:
         """
         if len(versionlist) is 0:
             return ""
-        versionlist.sort()
-        return versionlist[-1]
+
+        highest = TorCtl.RouterVersion("0.0.0.0")
+        for v in versionlist:
+            cur = TorCtl.RouterVersion(v)
+            if cur > highest:
+                highest = cur
+
+        return str(highest)
         
     def get_version_type(self, fingerprint):
         """Get the type of version the relay with fingerprint C{fingerprint}
