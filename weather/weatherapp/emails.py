@@ -119,11 +119,10 @@ _WELCOME_MAIL = "Hello and welcome to Tor!\n\n" +\
     "operators. If you're interested in Tor Weather, please visit the "+\
     "following link to register:\n\n"+\
     "%s\n\n"+\
-    "You might also be interested in the or-announce mailing list, "+\
+    "You might also be interested in the tor-announce mailing list, "+\
     "which is a low volume list for announcements of new releases and "+\
-    "critical security updates. To join, send an e-mail message to "+\
-    "majordomo@seul.org "+\
-    "with no subject and a body of \"subscribe or-announce\". \n\n"+\
+    "critical security updates. To join, visit the following address:\n\n"+\
+    "https://lists.torproject.org/cgi-bin/mailman/listinfo/tor-announce\n\n"+\
     "%sThank you again for your contribution to the Tor network! "+\
     "We won't send you any further emails unless you subscribe.\n\n"+\
     "Disclaimer: If you have no idea why you're receiving this email, we "+\
