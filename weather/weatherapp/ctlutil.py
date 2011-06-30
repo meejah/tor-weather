@@ -288,7 +288,7 @@ class CtlUtil:
         # in the `recommended' list
         if client_version.endswith("-dev"):
             version_list.append(client_version)
-            if get_highest_version(version_list) == client_version:
+            if self.get_highest_version(version_list) == client_version:
                 return 'RECOMMENDED'
             # If 0.2.1.34 is stable, that means 0.2.1.34-dev is fine, too.
             nondev_name = client_version.replace("-dev", "")
