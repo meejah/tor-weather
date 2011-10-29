@@ -7,7 +7,7 @@ DEBUG = False #set to true to see stack traces instead of standard html errors
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-     ('Tor Admins', 'tor-admins@torproject.org'),
+     ('Tor Admins', 'torproject-admin@torproject.org'),
 )
 
 MANAGERS = ADMINS
