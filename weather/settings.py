@@ -11,7 +11,7 @@ ADMINS = (
 )
 
 # Set From: address for outgoing admin emails
-SERVER_EMAIL = "weather@bahri.torproject.org"
+SERVER_EMAIL = "tor-weather@torproject.org"
 
 MANAGERS = ADMINS
 
