@@ -7,8 +7,11 @@ DEBUG = False #set to true to see stack traces instead of standard html errors
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-     ('Tor Admins', 'torproject-admin@torproject.org'),
+     ('Weather Admin', 'kaner@torproject.org'),
 )
+
+# Set From: address for outgoing admin emails
+SERVER_EMAIL = "weather@bahri.torproject.org"
 
 MANAGERS = ADMINS
 
