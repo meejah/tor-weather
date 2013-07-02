@@ -13,12 +13,12 @@
    by your local torrc if necessary. The default is 9051. Change the base_url 
    field to reflect the base URL for the Tor Weather application.
 
-4) A copy of (or link to) the TorCtl package must be located within the weather
+4) A copy of (or link to) the Stem package must be located within the weather
    directory.
 
-   $ svn co https://svn.torproject.org/svn/torctl/branches/stable/python/TorCtl
+   $ git clone https://git.torproject.org/stem.git
    $ cd current/weather
-   $ ln -s ../../TorCtl .
+   $ ln -s ../../stem .
 
 5) Create a file named auth_token inside the weather.config directory and 
    insert your Tor hashed control password in plain text. The file should 
@@ -114,7 +114,7 @@
        --chdir "/home/weather/opt/current/weather" \
        --exec /usr/bin/python manage.py runlistener
 
-   The listener waits for consensus events from your local TorCtl process, then
+   The listener waits for consensus events from your local Stem process, then
    updates the database and sends notifications.
 
  WARNING: There should only be one instance of this application running at any

@@ -474,7 +474,7 @@ class VersionSub(Subscription):
     notifications to their C{subscriber} if the C{subscriber}'s C{router} is
     running a version of Tor that is out-of-date. OBSOLETE notifications are
     triggered if the C{router}'s version of Tor is not in the list of 
-    recommended versions (obtained via TorCtl), with a few exceptions.
+    recommended versions (obtained via Stem), with a few exceptions.
     Django uses class variables to specify model fields, but these fields
     are practically used and thought of as instance variables, so this
     documentation will refer to them as such. Field types are specified as 

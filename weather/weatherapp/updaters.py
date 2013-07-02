@@ -10,7 +10,7 @@ parameter.
 
 @type ctl_util: CtlUtil
 @var ctl_util: A CtlUtil object for the module to handle the connection to and
-    communication with TorCtl.
+    communication with Stem.
 @var failed_email_file: A log file for parsed email addresses that were non-functional. 
 """
 import socket, sys, os
@@ -88,7 +88,7 @@ def check_low_bandwidth(ctl_util, email_list):
 
     for sub in subs:
 
-        #TorCtl does type checking, so fingerprint needs to be converted from
+        #Stem does type checking, so fingerprint needs to be converted from
         #a unicode string to a python str
         fingerprint = str(sub.subscriber.router.fingerprint)
 

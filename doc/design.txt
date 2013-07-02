@@ -68,7 +68,7 @@ Low Bandwidth Notifications
 Version Notifications
 ........................
     A list of "recommended" Tor versions can be obtained via communication with
-    TorCtl. The list contains all stable versions of Tor that are not considered
+    Stem. The list contains all stable versions of Tor that are not considered
     obsolete and includes some alpha versions. There are two version 
     notification types to choose from: required and recommended.
         
@@ -160,11 +160,11 @@ The module stores all of the controllers for the web interface.
 
 auth_token
 ..............
-A key used to authenticate a connection to the local Tor process through TorCtl
+A key used to authenticate a connection to the local Tor process through Stem
 
 ctlutil.py
 ............
-Contains the CtlUtil class, which establishes a connection to TorCtl and handles all relevant communication (i.e. accessing consensus documents and descriptor files).
+Contains the CtlUtil class, which establishes a connection to Stem and handles all relevant communication (i.e. accessing consensus documents and descriptor files).
 
 emails.py
 ............
@@ -177,7 +177,7 @@ method to access the appropriate message.
 
 listener.py
 ..............
-Listens to TorCtl for new consensus events and initializes the events to check all subscriptions.
+Listens to Stem for new consensus events and initializes the events to check all subscriptions.
 
 updaters.py
 .............
@@ -192,7 +192,7 @@ The arrival of a new consensus document triggers a cascade of events. First, the
 
 Consensus Event Hanlding
 ..........................
-The main method in listeners.py spawns a thread that continually listens for new consensus events through TorCtl and triggers run_all() within the updaters module when a consensus document is received.
+The main method in listeners.py spawns a thread that continually listens for new consensus events through Stem and triggers run_all() within the updaters module when a consensus document is received.
 
 Updating and Notifying
 ..........................
