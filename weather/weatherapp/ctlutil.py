@@ -1,20 +1,17 @@
 """This module contains the CtlUtil class. CtlUtil objects set up a connection
-to TorCtl and handle communication concerning consensus documents and 
+to Stem and handle communication concerning consensus documents and 
 descriptor files.
 
-@var debugfile: The debug file used by TorCtl .
 @var unparsable_email_file: A log file for contacts with unparsable emails.
 """
 
 import socket
-from TorCtl import TorCtl
 from config import config
 import logging
 import re
 import string
-
-#for TorCtl
-debugfile = open('log/debug', 'w')
+import stem.version
+from stem.control import Controller, EventType
 
 #for unparsable emails
 unparsable_email_file = 'log/unparsable_emails.txt'
@@ -37,25 +34,25 @@ match_hibernating = "^(opt\ )?hibernating 1$"
 
 class CtlUtil:
     """A class that handles communication with the local Tor process via
-    TorCtl.
+    Stem.
 
     @type _CONTROL_HOST: str
-    @cvar _CONTROL_HOST: Constant for the control host of the TorCtl connection.
+    @cvar _CONTROL_HOST: Constant for the control host of the Stem connection.
     @type _CONTROL_PORT: int
-    @cvar _CONTROL_PORT: Constant for the control port of the TorCtl connection.
+    @cvar _CONTROL_PORT: Constant for the control port of the Stem connection.
     @type _AUTHENTICATOR: str
-    @cvar _AUTHENTICATOR: Constant for the authenticator string of the TorCtl
+    @cvar _AUTHENTICATOR: Constant for the authenticator string of the Stem
         connection.
     @type control_host: str
-    @ivar control_host: Control host of the TorCtl connection.
+    @ivar control_host: Control host of the Stem connection.
     @type control_port: int
-    @ivar control_port: Control port of the TorCtl connection.
+    @ivar control_port: Control port of the Stem connection.
     @type sock: socket._socketobject
-    @ivar sock: Socket of the TorCtl connection.
+    @ivar sock: Socket of the Stem connection.
     @type authenticator: str
-    @ivar authenticator: Authenticator string of the TorCtl connection.
-    @type control: TorCtl Connection
-    @ivar control: Connection to TorCtl.
+    @ivar authenticator: Authenticator string of the Stem connection.
+    @type control: Stem Connection
+    @ivar control: Connection to Stem.
     """
     _CONTROL_HOST = '127.0.0.1'
     _CONTROL_PORT = config.control_port 
@@ -64,7 +61,7 @@ class CtlUtil:
     def __init__(self, control_host = _CONTROL_HOST, 
                 control_port = _CONTROL_PORT, sock = None, 
                 authenticator = _AUTHENTICATOR):
-        """Initialize the CtlUtil object, connect to TorCtl."""
+        """Initialize the CtlUtil object, connect to Stem."""
 
         self.sock = sock
 
@@ -87,13 +84,11 @@ class CtlUtil:
             raise
 
         
-        self.control = TorCtl.Connection(self.sock)
+        self.control = Controller.from_port(self.control_port)
 
         # Authenticate connection
         self.control.authenticate(config.authenticator)
 
-        # Set up log file
-        self.control.debug(debugfile)
 
     def __del__(self):
         """Closes the connection when the CtlUtil object is garbage collected.
@@ -122,16 +117,14 @@ class CtlUtil:
         @return: String representation of the single consensus entry or the
                  empty string if the consensus entry cannot be retrieved.
         """
-        # get_info method returns a dictionary with single mapping, with
-        # all the info stored as the single value, so this extracts the string
         cons = ''
         try:
-            cons = self.control.get_info("ns/id/" + node_id).values()[0]
+            cons = self.control.get_info("ns/id/" + node_id)
 
-        except TorCtl.ErrorReply, e:
-            #If we're getting here, we're likely seeing:
-            # ErrorReply: 552 Unrecognized key "ns/id/46D9..."
-            logging.error("ErrorReply: %s" % str(e))
+        except stem.ControllerError, e:
+            logging.error("ControllerError: %s" % str(e))
+        except stem.ProtocolError, e:
+            logging.error("ProtocolError: %s" % str(e))
         except:
             logging.error("Unknown exception in "+\
                     "ctlutil.CtlUtil.get_single_consensus()")
@@ -145,9 +138,7 @@ class CtlUtil:
         @rtype: str
         @return: String representation of entire consensus document.
         """
-        # get_info method returns a dictionary with single mapping, with
-        # all the info stored as the single value, so this extracts the string
-        return self.control.get_info("ns/all").values()[0]
+        return self.control.get_info("ns/all")
 
     def get_single_descriptor(self, node_id):
         """Get a descriptor file for a specific router with fingerprint 
@@ -160,13 +151,13 @@ class CtlUtil:
         @return: String representation of the single descirptor file or
         the empty string if no such descriptor file exists.
         """
-        # get_info method returns a dictionary with single mapping, with
-        # all the info stored as the single value, so this extracts the string
         desc = ''
         try:
-            desc = self.control.get_info("desc/id/" + node_id).values()[0]
-        except TorCtl.ErrorReply, e:
-            logging.error("ErrorReply: %s" % str(e))
+            desc = self.control.get_info("desc/id/" + node_id)
+        except stem.ControllerError, e:
+            logging.error("ControllerError: %s" % str(e))
+        except stem.ProtocolError, e:
+            logging.error("ProtocolError: %s" % str(e))
         except:
             logging.error("Unknown exception in CtlUtil" +
                           "get_single_descriptor()")
@@ -178,9 +169,7 @@ class CtlUtil:
         @rtype: str
         @return: String representation of all descriptor files.
         """
-        # get_info method returns a dictionary with single mapping, with
-        # all the info stored as the single value, so this extracts the string
-        return self.control.get_info("desc/all-recent").values()[0]
+        return self.control.get_info("desc/all-recent")
 
     def get_descriptor_list(self):
         """Get a list of strings of all descriptor files for every router
@@ -195,8 +184,7 @@ class CtlUtil:
     def get_rec_version_list(self):
         """Get a list of currently recommended versions sorted in ascending
         order."""
-        return self.control.get_info("status/version/recommended").\
-        values()[0].split(',')
+        return self.control.get_info("status/version/recommended").split(',')
 
     def get_stable_version_list(self):
         """Get a list of stable, recommended versions of client software.
@@ -239,9 +227,9 @@ class CtlUtil:
         if len(versionlist) is 0:
             return ""
 
-        highest = TorCtl.RouterVersion("0.0.0.0")
+        highest = stem.version.Version("0.0.0.0")
         for v in versionlist:
-            cur = TorCtl.RouterVersion(v)
+            cur = stem.version.Version(v)
             if cur > highest:
                 highest = cur
 
@@ -352,12 +340,16 @@ class CtlUtil:
                                                    or line.endswith('*:*'))):
                     return True
             return False
-        except TorCtl.ErrorReply, e:
-            logging.error("ErrorReply: %s" % str(e))
+        except stem.ControllerError, e:
+            logging.error("ControllerError: %s" % str(e))
+            return False
+        except stem.ProtocolError, e:
+            logging.error("ProtocolError: %s" % str(e))
             return False
         except:
             # some other error with the function
             logging.error("Unknown exception in ctlutil.Ctlutil.is_exit()")
+           return False
 
     def get_finger_name_list(self):
         """Get a list of fingerprint and name pairs for all routers in the
@@ -462,10 +454,11 @@ class CtlUtil:
                 return True
             else:
                 return False
-        except TorCtl.ErrorReply, e:
-            #If we're getting here, we're likely seeing:
-            #ErrorReply: 552 Unrecognized key "ns/id/46D9..."
-            logging.error("ErrorReply: %s" % str(e))
+        except stem.ControllerError, e:
+            logging.error("ControllerError: %s" % str(e))
+            return False
+        except stem.ProtocolError, e:
+            logging.error("ProtocolError: %s" % str(e))
             return False
         except:
             logging.error("Unknown exception in ctlutil.Ctlutil.is_stable()")
