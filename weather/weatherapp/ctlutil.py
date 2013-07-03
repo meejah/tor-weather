@@ -84,7 +84,7 @@ class CtlUtil:
             raise
 
         
-        self.control = Controller.from_port(self.control_port)
+        self.control = Controller.from_port(port = self.control_port)
 
         # Authenticate connection
         self.control.authenticate(config.authenticator)
