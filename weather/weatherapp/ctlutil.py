@@ -91,14 +91,6 @@ class CtlUtil:
         del self.control
         self.control = None
 
-    def get_full_consensus(self):
-        """Get the entire consensus document for every router currently up.
-
-        @rtype: str
-        @return: String representation of entire consensus document.
-        """
-        return self.control.get_info("ns/all")
-
     def get_single_descriptor(self, node_id):
         """Get a descriptor file for a specific router with fingerprint 
         C{node_id}. If a descriptor cannot be retrieved, returns the 
