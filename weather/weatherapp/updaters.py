@@ -13,14 +13,10 @@ parameter.
     communication with Stem.
 @var failed_email_file: A log file for parsed email addresses that were non-functional. 
 """
-import socket, sys, os
-import threading
 from datetime import datetime
-import time
 import logging
 from smtplib import SMTPException
 
-from config import config
 from weatherapp.ctlutil import CtlUtil
 from weatherapp.models import Subscriber, Router, NodeDownSub, BandwidthSub, \
                               TShirtSub, VersionSub, DeployedDatetime

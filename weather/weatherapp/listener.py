@@ -1,9 +1,7 @@
 """A module for listening to Tor for new consensus events. When one occurs,
 initializes the checker/updater cascade in the updaters module."""
 
-import sys, os
 import logging
-import socket
 
 from config import config
 from weatherapp import updaters
