@@ -13,7 +13,7 @@ import string
 import stem.version
 
 from stem import Flag
-from stem.control import Controller, EventType
+from stem.control import Controller
 from config import config
 
 #for unparsable emails
@@ -83,25 +83,6 @@ class CtlUtil:
 
         return self.control.get_info("status/version/recommended", "").split(',')
 
-    def get_stable_version_list(self):
-        """
-        Get a list of stable, recommended versions of client software.
-
-        @rtype: list[str]
-        @return: A list of stable, recommended versions of client software
-        sorted in ascending order.
-        """
-
-        version_list = self.get_rec_version_list()
-
-        for version in version_list:
-            if 'alpha' in version or 'beta' in version:
-                index = version_list.index(version)
-                version_list = version_list[:index]
-                break
-
-        return version_list
-
     def get_version(self, fingerprint):
         """
         Get the version of the Tor software that the relay with fingerprint
@@ -118,7 +99,7 @@ class CtlUtil:
         try:
             desc = self.control.get_server_descriptor(fingerprint)
             return str(desc.tor_version)
-        except stem.ControllerError, exc:
+        except stem.ControllerError:
             return ''
 
     def get_highest_version(self, versionlist):
@@ -187,23 +168,6 @@ class CtlUtil:
 
         return 'OBSOLETE'
 
-    def has_rec_version(self, fingerprint):
-        """
-        Check if a Tor relay is running a recommended version of the Tor
-        software.
-
-        @type fingerprint: str
-        @param fingerprint: The router's fingerprint
-
-        @rtype: bool
-        @return: C{True} if the router is running a recommended version,
-            C{False} if not.
-        """
-
-        rec_version_list = self.get_rec_version_list()
-        node_version = self.get_version(fingerprint)
-        return node_version in rec_version_list
-
     def is_up(self, fingerprint):
         """
         Check if this node is up (actively running) by requesting a consensus
@@ -258,28 +222,6 @@ class CtlUtil:
                 router_list.append((desc.fingerprint, desc.nickname))
 
         return router_list
-
-    def get_finger_list(self):
-        """
-        Get a list of fingerprints for all routers in the current descriptor
-        file.
-
-        @rtype: list[str]
-        @return: List of fingerprints for all routers in the current
-                 descriptor file.
-        """
-
-        # Use get_finger_name_list and take out name fields.
-
-        finger_name_list = self.get_finger_name_list()
-        finger_list = []
-
-        # Append the first element of each pair.
-
-        for pair in finger_name_list:
-            finger_list.append(pair[0])
-
-        return finger_list
 
     def get_new_avg_bandwidth(self, avg_bandwidth, hours_up, obs_bandwidth):
         """
