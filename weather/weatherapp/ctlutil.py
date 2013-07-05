@@ -5,7 +5,6 @@ descriptor files.
 @var unparsable_email_file: A log file for contacts with unparsable emails.
 """
 
-import socket
 from config import config
 import logging
 import re
@@ -47,8 +46,8 @@ class CtlUtil:
     @ivar control_host: Control host of the Stem connection.
     @type control_port: int
     @ivar control_port: Control port of the Stem connection.
-    @type sock: socket._socketobject
-    @ivar sock: Socket of the Stem connection.
+    @type control: stem.control.Controller
+    @ivar control: Stem controller connection.
     @type authenticator: str
     @ivar authenticator: Authenticator string of the Stem connection.
     @type control: Stem Connection
@@ -63,28 +62,15 @@ class CtlUtil:
                 authenticator = _AUTHENTICATOR):
         """Initialize the CtlUtil object, connect to Stem."""
 
-        self.sock = sock
-
-        if not sock:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
         self.control_host = control_host
         self.control_port = control_port
         self.authenticator = authenticator
 
-        # Try to connect 
         try:
-            self.sock.connect((self.control_host, self.control_port))
-        except:
-            errormsg = "Could not connect to Tor control port.\n" + \
-            "Is Tor running on %s with its control port opened on %s?" %\
-            (control_host, control_port)
-
-            logging.error(errormsg)
-            raise
-
-        
-        self.control = Controller.from_port(port = self.control_port)
+            self.control = Controller.from_port(port = self.control_port)
+        except stem.SocketError, exc:
+            logging.error("Unable to connect to tor's control port: %s" % exc)
+            raise exc
 
         # Authenticate connection
         self.control.authenticate(config.authenticator)
@@ -95,10 +81,6 @@ class CtlUtil:
         (From original Tor Weather)
         """
         
-        self.sock.close()
-        del self.sock
-        self.sock = None
-
         try:
             self.control.close()
         except:
