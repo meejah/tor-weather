@@ -1,25 +1,27 @@
-"""This module contains the CtlUtil class. CtlUtil objects set up a connection
-to Stem and handle communication concerning consensus documents and 
-descriptor files.
+"""
+This module contains the CtlUtil class. CtlUtil objects set up a connection to
+Stem and handle communication concerning consensus documents and descriptor
+files.
 
 @var unparsable_email_file: A log file for contacts with unparsable emails.
 """
 
-from config import config
 import logging
 import re
 import string
+
 import stem.version
 
 from stem import Flag
 from stem.control import Controller, EventType
+from config import config
 
 #for unparsable emails
 unparsable_email_file = 'log/unparsable_emails.txt'
 
 class CtlUtil:
-    """A class that handles communication with the local Tor process via
-    Stem.
+    """
+    A class that handles communication with the local Tor process via Stem.
 
     @type _CONTROL_HOST: str
     @cvar _CONTROL_HOST: Constant for the control host of the Stem connection.
@@ -28,6 +30,7 @@ class CtlUtil:
     @type _AUTHENTICATOR: str
     @cvar _AUTHENTICATOR: Constant for the authenticator string of the Stem
         connection.
+
     @type control_host: str
     @ivar control_host: Control host of the Stem connection.
     @type control_port: int
@@ -39,14 +42,17 @@ class CtlUtil:
     @type control: Stem Connection
     @ivar control: Connection to Stem.
     """
+
     _CONTROL_HOST = '127.0.0.1'
-    _CONTROL_PORT = config.control_port 
+    _CONTROL_PORT = config.control_port
     _AUTHENTICATOR = config.authenticator
-    
-    def __init__(self, control_host = _CONTROL_HOST, 
-                control_port = _CONTROL_PORT, sock = None, 
+
+    def __init__(self, control_host = _CONTROL_HOST,
+                control_port = _CONTROL_PORT, sock = None,
                 authenticator = _AUTHENTICATOR):
-        """Initialize the CtlUtil object, connect to Stem."""
+        """
+        Initialize the CtlUtil object, connect to Stem.
+        """
 
         self.control_host = control_host
         self.control_port = control_port
@@ -61,33 +67,33 @@ class CtlUtil:
         # Authenticate connection
         self.control.authenticate(config.authenticator)
 
-
     def __del__(self):
-        """Closes the connection when the CtlUtil object is garbage collected.
+        """
+        Closes the connection when the CtlUtil object is garbage collected.
         (From original Tor Weather)
         """
-        
-        try:
-            self.control.close()
-        except:
-            pass
-        
-        del self.control
-        self.control = None
+
+        self.control.close()
 
     def get_rec_version_list(self):
-        """Get a list of currently recommended versions sorted in ascending
-        order."""
-        return self.control.get_info("status/version/recommended").split(',')
+        """
+        Get a list of currently recommended versions sorted in ascending
+        order.
+        """
+
+        return self.control.get_info("status/version/recommended", "").split(',')
 
     def get_stable_version_list(self):
-        """Get a list of stable, recommended versions of client software.
+        """
+        Get a list of stable, recommended versions of client software.
 
         @rtype: list[str]
         @return: A list of stable, recommended versions of client software
         sorted in ascending order.
         """
+
         version_list = self.get_rec_version_list()
+
         for version in version_list:
             if 'alpha' in version or 'beta' in version:
                 index = version_list.index(version)
@@ -97,7 +103,8 @@ class CtlUtil:
         return version_list
 
     def get_version(self, fingerprint):
-        """Get the version of the Tor software that the relay with fingerprint
+        """
+        Get the version of the Tor software that the relay with fingerprint
         C{fingerprint} is running
 
         @type fingerprint: str
@@ -115,41 +122,40 @@ class CtlUtil:
             return ''
 
     def get_highest_version(self, versionlist):
-        """Return the highest Tor version from a list of versions.
         """
-        if len(versionlist) is 0:
+        Return the highest Tor version from a list of versions.
+        """
+
+        if not versionlist:
             return ""
 
-        highest = stem.version.Version("0.0.0.0")
-        for v in versionlist:
-            cur = stem.version.Version(v)
-            if cur > highest:
-                highest = cur
-
+        highest = max([stem.version.Version(v) for v in versionlist])
         return str(highest)
-        
+
     def get_version_type(self, fingerprint):
-        """Get the type of version the relay with fingerprint C{fingerprint}
-        is running. 
-        
+        """
+        Get the type of version the relay with fingerprint C{fingerprint} is
+        running.
+
         @type fingerprint: str
         @param fingerprint: The fingerprint of the Tor relay to check.
 
         @rtype: str
         @return: The type of version of Tor the client is running, where the
-        types are RECOMMENDED or OBSOLETE. 
+        types are RECOMMENDED or OBSOLETE.
 
-        Returns RECOMMENDED if the relay is running a version that is found 
-        in the `recommended' versions list or if the version is a more recent 
-        dev version than the most recent recommended dev version. (Basically, 
-        we don't want to bother people for being nice and testing new versions 
-        for us) 
-        There is one more special case where we return RECOMMENDED and that is 
+        Returns RECOMMENDED if the relay is running a version that is found
+        in the `recommended' versions list or if the version is a more recent
+        dev version than the most recent recommended dev version. (Basically,
+        we don't want to bother people for being nice and testing new versions
+        for us)
+        There is one more special case where we return RECOMMENDED and that is
         when there is *no* recommended version currently known.
 
         We return OBSOLETE if neither of the above criteria matches.
         If the version cannot be determined, return ERROR.
         """
+
         version_list = self.get_rec_version_list()
         client_version = self.get_version(fingerprint)
 
@@ -157,9 +163,10 @@ class CtlUtil:
             return 'ERROR'
 
         # Special case when the dirauth can't agree on recommended versions,
-        # the list is empty. In that case we play along as if everything was 
+        # the list is empty. In that case we play along as if everything was
         # fine
-        if len(version_list) == 0:
+
+        if not version_list:
             return 'RECOMMENDED'
 
         if client_version in version_list:
@@ -167,10 +174,12 @@ class CtlUtil:
 
         # Check if the user is running a more recent dev version than is found
         # in the `recommended' list
+
         if client_version.endswith("-dev"):
             version_list.append(client_version)
             if self.get_highest_version(version_list) == client_version:
                 return 'RECOMMENDED'
+
             # If 0.2.1.34 is stable, that means 0.2.1.34-dev is fine, too.
             nondev_name = client_version.replace("-dev", "")
             if nondev_name in version_list:
@@ -179,30 +188,27 @@ class CtlUtil:
         return 'OBSOLETE'
 
     def has_rec_version(self, fingerprint):
-        """Check if a Tor relay is running a recommended version of the Tor
+        """
+        Check if a Tor relay is running a recommended version of the Tor
         software.
-        
+
         @type fingerprint: str
         @param fingerprint: The router's fingerprint
-        
+
         @rtype: bool
-        @return: C{True} if the router is running a recommended version, 
+        @return: C{True} if the router is running a recommended version,
             C{False} if not.
         """
-        rec_version_list = self.get_rec_version_list()
-        node_version = self.get_version(fingerprint) 
-        rec_version = False
-        for version in rec_version_list:
-            if version == node_version:
-                rec_version = True
-                break
 
-        return rec_version
+        rec_version_list = self.get_rec_version_list()
+        node_version = self.get_version(fingerprint)
+        return node_version in rec_version_list
 
     def is_up(self, fingerprint):
-        """Check if this node is up (actively running) by requesting a
-        consensus document for node C{fingerprint}. If a document is received
-        successfully, then the node is up; if a document is not received, then 
+        """
+        Check if this node is up (actively running) by requesting a consensus
+        document for node C{fingerprint}. If a document is received
+        successfully, then the node is up; if a document is not received, then
         the router is down. If a node is hiberanating, it will return C{False}.
 
         @type fingerprint: str
@@ -217,81 +223,88 @@ class CtlUtil:
         except:
             return False
 
-    def is_exit(self, node_id):
-        """Check if this node is an exit node (accepts exits to port 80).
-        
-        @type node_id: str
-        @param node_id: The router's fingerprint
+    def is_exit(self, fingerprint):
+        """
+        Check if this node is an exit node (accepts exits to port 80).
+
+        @type fingerprint: str
+        @param fingerprint: The router's fingerprint
         @rtype: bool
         @return: True if this router accepts exits to port 80, false if not
             or if the descriptor file can't be accessed for this router.
         """
 
         try:
-            desc = self.control.get_server_descriptor(node_id)
+            desc = self.control.get_server_descriptor(fingerprint)
             return desc.exit_policy.can_exit_to(port = 80)
         except stem.ControllerError, exc:
-            logging.error("Unable to get server descriptor for '%s': %s" % (node_id, exc))
+            logging.error("Unable to get server descriptor for '%s': %s" % (fingerprint, exc))
             return False
 
     def get_finger_name_list(self):
-        """Get a list of fingerprint and name pairs for all routers in the
-        current descriptor file.
+        """
+        Get a list of fingerprint and name pairs for all routers in the current
+        descriptor file.
 
         @rtype: list[(str,str)]
-        @return: List of fingerprint and name pairs for all routers in the 
+        @return: List of fingerprint and name pairs for all routers in the
                  current descriptor file.
         """
-        # Make a list of tuples of all router fingerprints in descriptor
-        # with whitespace removed and router names.
+
         router_list= []
 
-        # Loop through each individual descriptor file.
         for desc in self.control.get_server_descriptors([]):
             if desc.fingerprint:
                 router_list.append((desc.fingerprint, desc.nickname))
-        
+
         return router_list
 
     def get_finger_list(self):
-        """Get a list of fingerprints for all routers in the current
-        descriptor file.
+        """
+        Get a list of fingerprints for all routers in the current descriptor
+        file.
 
         @rtype: list[str]
-        @return: List of fingerprints for all routers in the current 
+        @return: List of fingerprints for all routers in the current
                  descriptor file.
         """
-        # Use get_finger_name_list and take out name fields.
-        finger_name_list = self.get_finger_name_list()
 
+        # Use get_finger_name_list and take out name fields.
+
+        finger_name_list = self.get_finger_name_list()
         finger_list = []
+
         # Append the first element of each pair.
+
         for pair in finger_name_list:
             finger_list.append(pair[0])
-        
+
         return finger_list
 
     def get_new_avg_bandwidth(self, avg_bandwidth, hours_up, obs_bandwidth):
-        """Calculates the new average bandwidth for a router in kB/s. The 
-        average is calculated by rounding rather than truncating.
-         
+        """
+        Calculates the new average bandwidth for a router in kB/s. The average
+        is calculated by rounding rather than truncating.
+
         @type avg_bandwidth: int
         @param avg_bandwidth: The current average bandwidth for the router in
             kB/s.
         @type hours_up: int
-        @param hours_up: The number of hours this router has been up 
+        @param hours_up: The number of hours this router has been up
         @type obs_bandwidth: int
-        @param obs_bandwidth: The observed bandwidth in KB/s taken from the 
+        @param obs_bandwidth: The observed bandwidth in KB/s taken from the
             most recent descriptor file for this router
         @rtype: int
         @return: The average bandwidth for this router in KB/s
         """
+
         new_avg = float((hours_up*avg_bandwidth) + obs_bandwidth)/(hours_up + 1)
         new_avg = int(round(new_avg))
         return new_avg
 
     def get_email(self, fingerprint):
-        """Get the contact email address for a router operator.
+        """
+        Get the contact email address for a router operator.
 
         @type fingerprint: str
         @param fingerprint: The fingerprint of the router whose email will be
@@ -300,7 +313,7 @@ class CtlUtil:
         @return: The router operator's email address or the empty string if
                 the email address is unable to be parsed.
         """
-        
+
         try:
             desc = self.control.get_server_descriptor(fingerprint)
             return self._unobscure_email(desc.contact)
@@ -308,7 +321,9 @@ class CtlUtil:
             return ''
 
     def is_stable(self, fingerprint):
-        """Check if a Tor node has the stable flag.
+        """
+        Check if a Tor node has the stable flag.
+
         @type fingerprint: str
         @param fingerprint: The fingerprint of the router to check
 
@@ -325,8 +340,9 @@ class CtlUtil:
             return False
 
     def is_hibernating(self, fingerprint):
-        """Check if the Tor relay with fingerprint C{fingerprint} is
-        hibernating.
+        """
+        Check if the Tor relay with fingerprint C{fingerprint} is hibernating.
+
         @type fingerprint: str
         @param fingerprint: The fingerprint of the Tor relay to check.
 
@@ -341,21 +357,23 @@ class CtlUtil:
             return False
 
     def is_up_or_hibernating(self, fingerprint):
-        """Check if the Tor relay with fingerprint C{fingerprint} is up or 
+        """
+        Check if the Tor relay with fingerprint C{fingerprint} is up or
         hibernating.
 
         @type fingerprint: str
         @param fingerprint: The fingerprint of the Tor relay to check.
 
         @rtype: bool
-        @return: True if self.is_up(fingerprint or 
+        @return: True if self.is_up(fingerprint or
         self.is_hibernating(fingerprint)."""
-        
+
         return (self.is_up(fingerprint) or self.is_hibernating(fingerprint))
-    
+
     def get_bandwidth(self, fingerprint):
-        """Get the observed bandwidth in KB/s from the most recent descriptor
-        for the Tor relay with fingerprint C{fingerprint}.
+        """
+        Get the observed bandwidth in KB/s from the most recent descriptor for
+        the Tor relay with fingerprint C{fingerprint}.
 
         @type fingerprint: str
         @param fingerprint: The fingerprint of the Tor relay to check
@@ -368,10 +386,10 @@ class CtlUtil:
             return desc.observed_bandwidth / 1000
         except stem.ControllerError:
             return 0
-        
+
     def _unobscure_email(self, contact):
-        """Parse the email address from an individual router descriptor 
-        string.
+        """
+        Parse the email address from an individual router descriptor string.
 
         @type contact: str
         @param contact: Email address from the server descriptor.
@@ -381,12 +399,12 @@ class CtlUtil:
         """
 
         punct = string.punctuation
-        clean_line = contact.replace('<', ' ').replace('>', ' ') 
+        clean_line = contact.replace('<', ' ').replace('>', ' ')
 
         email = re.search('[^\s]+(?:@|['+punct+'\s]+at['+punct+'\s]+).+(?:\.'+
-                          '|['+punct+'\s]+dot['+punct+'\s]+)[^\n\s\)\(]+', 
+                          '|['+punct+'\s]+dot['+punct+'\s]+)[^\n\s\)\(]+',
                           clean_line, re.IGNORECASE)
-    
+
         if email == None:
             logging.info("Couldn't parse an email address from line:\n%s" %
                          contact)
