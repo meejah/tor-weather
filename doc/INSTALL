@@ -13,12 +13,9 @@
    by your local torrc if necessary. The default is 9051. Change the base_url 
    field to reflect the base URL for the Tor Weather application.
 
-4) A copy of (or link to) the Stem package must be located within the weather
-   directory.
+4) Install stem if you don't have it already...
 
-   $ git clone https://git.torproject.org/stem.git
-   $ cd current/weather
-   $ ln -s ../../stem .
+   https://stem.torproject.org/download.html
 
 5) Create a file named auth_token inside the weather.config directory and 
    insert your Tor hashed control password in plain text. The file should 
