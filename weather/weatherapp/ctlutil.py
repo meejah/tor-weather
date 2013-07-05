@@ -10,6 +10,8 @@ import logging
 import re
 import string
 import stem.version
+
+from stem import Flag
 from stem.control import Controller, EventType
 
 #for unparsable emails
@@ -89,31 +91,6 @@ class CtlUtil:
         del self.control
         self.control = None
 
-    def get_single_consensus(self, node_id):
-        """Get a consensus document for a specific router with fingerprint
-        C{node_id}.
-
-        @type node_id: str
-        @param node_id: Fingerprint of the node requested with no spaces.
-        @rtype: str
-        @return: String representation of the single consensus entry or the
-                 empty string if the consensus entry cannot be retrieved.
-        """
-        cons = ''
-        try:
-            cons = self.control.get_info("ns/id/" + node_id)
-
-        except stem.ControllerError, e:
-            logging.error("ControllerError: %s" % str(e))
-        except stem.ProtocolError, e:
-            logging.error("ProtocolError: %s" % str(e))
-        except:
-            logging.error("Unknown exception in "+\
-                    "ctlutil.CtlUtil.get_single_consensus()")
-
-        return cons
-
-        
     def get_full_consensus(self):
         """Get the entire consensus document for every router currently up.
 
@@ -299,11 +276,12 @@ class CtlUtil:
         @rtype: bool
         @return: C{True} if the node is up, C{False} if it's down.
         """
-        cons = self.get_single_consensus(fingerprint)
-        if cons == '':
-            return False
-        else:
+
+        try:
+            self.control.get_network_status(fingerprint)
             return True
+        except:
+            return False
 
     def is_exit(self, node_id):
         """Check if this node is an exit node (accepts exits to port 80).
@@ -431,19 +409,10 @@ class CtlUtil:
         """
 
         try:
-            info = self.get_single_consensus(fingerprint)
-            if re.search('\ns.* Stable ', info):
-                return True
-            else:
-                return False
+            desc = self.control.get_network_status(fingerprint)
+            return Flag.Stable in desc.flags
         except stem.ControllerError, e:
-            logging.error("ControllerError: %s" % str(e))
-            return False
-        except stem.ProtocolError, e:
-            logging.error("ProtocolError: %s" % str(e))
-            return False
-        except:
-            logging.error("Unknown exception in ctlutil.Ctlutil.is_stable()")
+            logging.error("Unable to get router status entry for '%s': %s" % (fingerprint, e))
             return False
 
     def is_hibernating(self, fingerprint):
