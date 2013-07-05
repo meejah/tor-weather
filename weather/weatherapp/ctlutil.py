@@ -17,16 +17,6 @@ from stem.control import Controller, EventType
 #for unparsable emails
 unparsable_email_file = 'log/unparsable_emails.txt'
 
-# Match fingerprint regex
-# Fingerprint lines in the descriptors can be
-# a) opt fingerprint ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD
-# b) fingerprint ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD ABCD
-match_fingerprint = "^(opt\ )?fingerprint ([0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4})$"
-
-# Match router regex
-# Router names can be between 1 and 19 alphanumeric characters ([A-Za-z0-9])
-match_router = "^router\ ([A-Za-z0-9]{0,19})\ .*$"
-
 class CtlUtil:
     """A class that handles communication with the local Tor process via
     Stem.
@@ -84,24 +74,6 @@ class CtlUtil:
         
         del self.control
         self.control = None
-
-    def get_full_descriptor(self):
-        """Get all current descriptor files for every router currently up.
-
-        @rtype: str
-        @return: String representation of all descriptor files.
-        """
-        return self.control.get_info("desc/all-recent")
-
-    def get_descriptor_list(self):
-        """Get a list of strings of all descriptor files for every router
-        currently up.
-
-        @rtype: list[str]
-        @return: List of strings representing all individual descriptor files.
-        """
-        # Individual descriptors are delimited by -----END SIGNATURE-----
-        return self.get_full_descriptor().split("-----END SIGNATURE-----")
 
     def get_rec_version_list(self):
         """Get a list of currently recommended versions sorted in ascending
@@ -273,27 +245,11 @@ class CtlUtil:
         # Make a list of tuples of all router fingerprints in descriptor
         # with whitespace removed and router names.
         router_list= []
-            
+
         # Loop through each individual descriptor file.
-        for desc in self.get_descriptor_list():
-            finger = ""
-
-            # Split each descriptor into lines.
-            desc_lines = desc.split("\n")
-                
-            # Loop through each line in the descriptor.
-            for line in desc_lines:
-                match = re.match(match_fingerprint, line)
-                if match:
-                    finger = match.group(2)
-                    finger = finger.replace(' ', '')
-                match = re.match(match_router, line)
-                if match:
-                    name = match.group(1)
-
-            # We ignore routers that don't publish their fingerprints
-            if not finger == "":
-                router_list.append((finger, name))
+        for desc in self.control.get_server_descriptors([]):
+            if desc.fingerprint:
+                router_list.append((desc.fingerprint, desc.nickname))
         
         return router_list
 
