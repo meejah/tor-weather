@@ -27,12 +27,6 @@ match_fingerprint = "^(opt\ )?fingerprint ([0-9A-F]{4}\ [0-9A-F]{4}\ [0-9A-F]{4}
 # Router names can be between 1 and 19 alphanumeric characters ([A-Za-z0-9])
 match_router = "^router\ ([A-Za-z0-9]{0,19})\ .*$"
 
-# Match hibernating regex
-# Hibernating indicator lines can be
-# a) opt hibernating 1
-# b) hibernating 1
-match_hibernating = "^(opt\ )?hibernating 1$"
-
 class CtlUtil:
     """A class that handles communication with the local Tor process via
     Stem.
@@ -91,29 +85,6 @@ class CtlUtil:
         del self.control
         self.control = None
 
-    def get_single_descriptor(self, node_id):
-        """Get a descriptor file for a specific router with fingerprint 
-        C{node_id}. If a descriptor cannot be retrieved, returns the 
-        empty string.
-
-        @type node_id: str
-        @param node_id: Fingerprint of the node requested with no spaces.
-        @rtype: str
-        @return: String representation of the single descirptor file or
-        the empty string if no such descriptor file exists.
-        """
-        desc = ''
-        try:
-            desc = self.control.get_info("desc/id/" + node_id)
-        except stem.ControllerError, e:
-            logging.error("ControllerError: %s" % str(e))
-        except stem.ProtocolError, e:
-            logging.error("ProtocolError: %s" % str(e))
-        except:
-            logging.error("Unknown exception in CtlUtil" +
-                          "get_single_descriptor()")
-        return desc
-
     def get_full_descriptor(self):
         """Get all current descriptor files for every router currently up.
 
@@ -164,12 +135,11 @@ class CtlUtil:
         @return: The version of the Tor software that this relay is running or
                  '' if the version cannot be retrieved.
         """
-        desc = self.get_single_descriptor(fingerprint)
-        search = re.search('\nplatform\sTor\s.*\s', desc)
 
-        if search != None:
-            return search.group().split()[2].replace(' ', '')
-        else:
+        try:
+            desc = self.control.get_server_descriptor(fingerprint)
+            return str(desc.tor_version)
+        except stem.ControllerError, exc:
             return ''
 
     def get_highest_version(self, versionlist):
@@ -284,24 +254,13 @@ class CtlUtil:
         @return: True if this router accepts exits to port 80, false if not
             or if the descriptor file can't be accessed for this router.
         """
+
         try:
-            descriptor = self.get_single_descriptor(node_id)
-            desc_lines = descriptor.split('\n')
-            for line in desc_lines:
-                if (line.startswith('accept') and (line.endswith(':80') 
-                                                   or line.endswith('*:*'))):
-                    return True
+            desc = self.control.get_server_descriptor(node_id)
+            return desc.exit_policy.can_exit_to(port = 80)
+        except stem.ControllerError, exc:
+            logging.error("Unable to get server descriptor for '%s': %s" % (node_id, exc))
             return False
-        except stem.ControllerError, e:
-            logging.error("ControllerError: %s" % str(e))
-            return False
-        except stem.ProtocolError, e:
-            logging.error("ProtocolError: %s" % str(e))
-            return False
-        except:
-            # some other error with the function
-            logging.error("Unknown exception in ctlutil.Ctlutil.is_exit()")
-           return False
 
     def get_finger_name_list(self):
         """Get a list of fingerprint and name pairs for all routers in the
@@ -386,9 +345,11 @@ class CtlUtil:
                 the email address is unable to be parsed.
         """
         
-        desc = self.get_single_descriptor(fingerprint)
-        email = self._parse_email(desc)
-        return email
+        try:
+            desc = self.control.get_server_descriptor(fingerprint)
+            return self._unobscure_email(desc.contact)
+        except stem.ControllerError:
+            return ''
 
     def is_stable(self, fingerprint):
         """Check if a Tor node has the stable flag.
@@ -417,13 +378,11 @@ class CtlUtil:
         @return: True if the Tor relay has a current descriptor file with
         the hibernating flag, False otherwise."""
 
-        desc = self.get_single_descriptor(fingerprint)
-        if not desc == "":
-            match = re.match(match_hibernating, desc)
-            if match:
-                return True
-            else:
-                return False
+        try:
+            desc = self.control.get_server_descriptor(fingerprint)
+            return desc.hibernating
+        except stem.ControllerError:
+            return False
 
     def is_up_or_hibernating(self, fingerprint):
         """Check if the Tor relay with fingerprint C{fingerprint} is up or 
@@ -447,35 +406,25 @@ class CtlUtil:
         @rtype: float
         @return: The observed bandwidth for this Tor relay.
         """
-        desc = self.get_single_descriptor(fingerprint)
-        bandwidth = 0	  	
-        desc_lines = desc.split('\n')
-        for line in desc_lines:
-            if line.startswith('bandwidth'):
-                word_list = line.split()
-                # the 4th word in the line is the bandwidth-observed in B/s
-                bandwidth = int(word_list[3]) / 1000
-        return bandwidth
+
+        try:
+            desc = self.control.get_server_descriptor(fingerprint)
+            return desc.observed_bandwidth / 1000
+        except stem.ControllerError:
+            return 0
         
-    def _parse_email(self, desc):
+    def _unobscure_email(self, contact):
         """Parse the email address from an individual router descriptor 
         string.
 
-        @type desc: str
-        @param desc: The string representation of the descriptor file for a
-                    Tor router.
+        @type contact: str
+        @param contact: Email address from the server descriptor.
         @rtype: str
         @return: The email address in desc. If the email address cannot be
                 parsed, the empty string.
         """
-        split_desc = desc.split('\n')
+
         punct = string.punctuation
-        contact = ""
-
-        for line in split_desc:
-            if line.startswith('contact '):
-                contact = contact + line
-
         clean_line = contact.replace('<', ' ').replace('>', ' ') 
 
         email = re.search('[^\s]+(?:@|['+punct+'\s]+at['+punct+'\s]+).+(?:\.'+
