@@ -7,7 +7,8 @@
 
 2) In weather/settings.py, change the EMAIL_* fields to reflect your SMTP 
    configurations and the email address for sending the Tor Weather 
-   notifications. 
+   notifications. (Out-of-the-box this should be using a file-only backend,
+   to facilitate development).
 
 3) In weather.config.config.py, set control_port to the ControlPort specified
    by your local torrc if necessary. The default is 9051. Change the base_url 
