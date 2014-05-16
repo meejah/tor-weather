@@ -10,7 +10,7 @@ class TestGetConfirmUrl(TestCase):
 
     def test_ok(self):
         val = url_helper.get_confirm_url("01234")
-        self.assertEqual(val, "https://weather.torproject.org/confirm/01234/")
+        self.assertEqual(val, url_helper.base_url + "/confirm/01234/")
 
 
 class TestGetConfirmPrefExt(TestCase):
@@ -57,7 +57,7 @@ class TestGetHomeUrl(TestCase):
     """Tests url_helper.get_home_url()"""
     def test_ok(self):
         val = url_helper.get_home_url()
-        self.assertEqual(val, "https://weather.torproject.org/")
+        self.assertEqual(val, url_helper.base_url + '/')
 
 
 class TestGetPendingExt(TestCase):
@@ -77,7 +77,7 @@ class TestGetPreferencesUrl(TestCase):
 
     def test_ok(self):
         val = url_helper.get_preferences_url("01234")
-        self.assertEqual(val, "https://weather.torproject.org/preferences/01234/")
+        self.assertEqual(val, url_helper.base_url + "/preferences/01234/")
 
 
 class TestGetPreferencesExt(TestCase):
@@ -114,7 +114,7 @@ class TestGetUnsubscribeUrl(TestCase):
 
     def test_ok(self):
         val = url_helper.get_unsubscribe_url("01234")
-        self.assertEqual(val, "https://weather.torproject.org/unsubscribe/01234/")
+        self.assertEqual(val, url_helper.base_url + "/unsubscribe/01234/")
 
 
 class TestGetDownloadUrl(TestCase):
