@@ -23,6 +23,7 @@ ONIONOO_PARAMS = [
 
 
 def key_serializer(query, params):
+    """ Generates serialized key for SimpleCache objects """
     s = query + ';'
     for key in ONIONOO_PARAMS:
         s = s + str(params.get(key))+';'
@@ -30,12 +31,14 @@ def key_serializer(query, params):
 
 
 def json_serializer(key, value):
+    """ Returns tuple of serialized value and flags for MemCache objects """
     if type(value) == str:
         return value, 1
     return json.dumps(value).encode('utf-8'), 2
 
 
 def json_deserializer(key, value, flags):
+    """ Returns the deserialized value for MemCache objects """
     if flags == 1:
         return value
     if flags == 2:
@@ -44,6 +47,8 @@ def json_deserializer(key, value, flags):
 
 
 class SimpleCache():
+    """ A simple cache class implemented using python dictionary """
+
     def __init__(self):
         self.dict = {}
 
@@ -54,7 +59,9 @@ class SimpleCache():
         self.dict[key_serializer(query, params)] = document
 
 
-class Memcache():
+class MemCache():
+    """ Cache class implemented using pymemcache """
+
     def __init__(self, host=('localhost', 11211)):
         from pymemcache.client import Client
         self.memcached_client = Client(self.memcached_host,

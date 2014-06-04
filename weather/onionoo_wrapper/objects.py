@@ -1,12 +1,17 @@
 """
-Object definitions for the onionoo wrapper
+Object definitions for the Onionoo wrapper
 """
 
 import requests
 import caching
 
 
-class InvalidDocumentTypeError(Exception):
+class BaseError(Exception):
+    pass
+
+
+class InvalidDocumentTypeError(BaseError):
+    """ Raised when document type requested is not supported by Onionoo """
     def __init__(self, doc_type):
         self.doc_type = doc_type
 
@@ -14,7 +19,8 @@ class InvalidDocumentTypeError(Exception):
         return 'Invalid document type ' + repr(self.doc_type)
 
 
-class OnionooError(Exception):
+class OnionooError(BaseError):
+    """ Raised when Onionoo responds with an error code """
     def __init__(self, code, msg):
         self.code = code
         self.msg = msg
@@ -23,7 +29,11 @@ class OnionooError(Exception):
         return str(self.code) + ' - ' + self.msg
 
 
-class RelaySummary:
+class BaseClass(object):
+    pass
+
+
+class RelaySummary(BaseClass):
     def __init__(self, document):
         self.nickname = document.get('n')
         self.fingerprint = document.get('f')
@@ -36,7 +46,7 @@ class RelaySummary:
                 "<No fingerprint>")
 
 
-class BridgeSummary:
+class BridgeSummary(BaseClass):
     def __init__(self, document):
         self.nickname = document.get('n')
         self.hash = document.get('h')
@@ -48,7 +58,7 @@ class BridgeSummary:
                 "<No fingerprint>")
 
 
-class Summary:
+class Summary(BaseClass):
     def __init__(self, document):
         self.relays_published = document.get('relays_published')
         self.bridges_published = document.get('bridges_published')
@@ -60,7 +70,7 @@ class Summary:
             (len(self.bridges or []), len(self.relays or []))
 
 
-class RelayDetails:
+class RelayDetails(BaseClass):
     def __init__(self, document):
         g = document.get
         self.nickname = g('nickname')
@@ -103,7 +113,7 @@ class RelayDetails:
                 "<No fingerprint>")
 
 
-class BridgeDetails:
+class BridgeDetails(BaseClass):
     def __init__(self, document):
         g = document.get
         self.nickname = g('nickname')
@@ -124,7 +134,7 @@ class BridgeDetails:
                 "<No fingerprint>")
 
 
-class Details:
+class Details(BaseClass):
     def __init__(self, document):
         self.relays_published = document.get('relays_published')
         self.bridges_published = document.get('bridges_published')
@@ -136,7 +146,7 @@ class Details:
             (len(self.bridges or []), len(self.relays or []))
 
 
-class GraphHistory:
+class GraphHistory(BaseClass):
     def __init__(self, document):
         g = document.get
         self.first = g('first')
@@ -150,7 +160,7 @@ class GraphHistory:
         return "Graph history object"
 
 
-class BandwidthDetail:
+class BandwidthDetail(BaseClass):
     def __init__(self, document):
         g = document.get
         self.finger_print = g('fingerprint')
@@ -163,7 +173,7 @@ class BandwidthDetail:
         return "Bandwidth object"
 
 
-class Bandwidth:
+class Bandwidth(BaseClass):
     def __init__(self, document):
         g = document.get
         self.relays_published = g('relays_published')
@@ -176,7 +186,7 @@ class Bandwidth:
             (len(self.bridges or []), len(self.relays or []))
 
 
-class RelayWeight:
+class RelayWeight(BaseClass):
     def __init__(self, document):
         g = document.get
         self.fingerprint = g('fingerprint')
@@ -201,7 +211,7 @@ class RelayWeight:
                                                '<no fingerprint>')
 
 
-class Weights:
+class Weights(BaseClass):
     def __init__(self, document):
         g = document.get
         self.relays_published = g('relays_published')
@@ -214,7 +224,7 @@ class Weights:
             (len(self.relays or []))
 
 
-class BridgeClient:
+class BridgeClient(BaseClass):
     def __init__(self, document):
         g = document.get
         self.fingerprint = g('fingerprint')
@@ -227,7 +237,7 @@ class BridgeClient:
                                                         '<no fingerprint>')
 
 
-class Clients:
+class Clients(BaseClass):
     def __init__(self, document):
         g = document.get
         self.relays_published = g('relays_published')
@@ -240,7 +250,7 @@ class Clients:
             % (len(self.bridges or []))
 
 
-class RelayUptime:
+class RelayUptime(BaseClass):
     def __init__(self, document):
         g = document.get
         self.fingerprint = g('fingerprint')
@@ -252,7 +262,7 @@ class RelayUptime:
                                                        '<no fingerprint>')
 
 
-class Uptime:
+class Uptime(BaseClass):
     def __init__(self, document):
         g = document.get
         self.relays_published = g('relays_published')
@@ -265,7 +275,8 @@ class Uptime:
             and %d relays)" % (len(self.bridges or []), len(self.relays or []))
 
 
-class OnionooResponse:
+class OnionooResponse(BaseClass):
+    """ """
     def __init__(self, headers={}, status_code=None, document=None):
         self.headers = headers
         self.status_code = status_code
@@ -275,7 +286,9 @@ class OnionooResponse:
         return self.document
 
 
-class OnionooRequest:
+class OnionooRequest(BaseClass):
+    """ A class for making sequential requests to Onionoo """
+
     ONIONOO_URL = 'https://onionoo.torproject.org/'
     DOC_TYPES = {
         'summary': Summary,
@@ -290,20 +303,19 @@ class OnionooRequest:
         self.base_URL = host or self.ONIONOO_URL
         self.cache_client = cache or caching.SimpleCache()
 
-    def build_request(self, doc_type, params={}):
-        self.doc_type = doc_type
-        self.params = {}
-        self.params = params
+    def get_response(self, doc_type, params={}):
+        """
+        Fetches requested document from Onionoo and
+        returns it as an encapsulated OnionooResponse object
+        """
 
-    def get_response(self):
-        # Check if document is requested is valid
-        if self.doc_type.lower() not in self.DOC_TYPES.keys():
-            raise InvalidDocumentTypeError(self.doc_type)
-        self.doc_type = self.doc_type.lower()
+        # Check if document requested is valid
+        if doc_type.lower() not in self.DOC_TYPES.keys():
+            raise InvalidDocumentTypeError(doc_type)
 
         # Check cache entries for similar request
         cache_entry = None
-        cache_entry = self.cache_client.get(self.doc_type, self.params)
+        cache_entry = self.cache_client.get(doc_type, params)
 
         result = None
         headers = {}
@@ -313,8 +325,8 @@ class OnionooRequest:
             headers['If-Modified-Since'] = last_entry_time
 
         # Send the request
-        req = requests.get(self.base_URL + self.doc_type,
-                           params=self.params,
+        req = requests.get(self.base_URL + doc_type,
+                           params=params,
                            headers=headers)
 
         # Format result based on response code
@@ -324,7 +336,7 @@ class OnionooRequest:
         elif req.status_code != requests.codes.OK:
             raise OnionooError(req.status_code, req.reason)
         else:
-            result = self.DOC_TYPES[self.doc_type](req.json())
+            result = self.DOC_TYPES[doc_type](req.json())
 
         response = OnionooResponse(headers=req.headers,
                                    status_code=req.status_code,
@@ -333,6 +345,6 @@ class OnionooRequest:
         # Update cache
         cache_entry = {'timestamp': req.headers['date'],
                        'record': result}
-        self.cache_client.set(self.doc_type, self.params, cache_entry)
+        self.cache_client.set(doc_type, params, cache_entry)
 
         return response
