@@ -33,12 +33,25 @@ class BaseClass(object):
     pass
 
 
-class RelaySummary(BaseClass):
+class _DocumentForwarder(BaseClass):
+    doc = None
+    keys = dict()
+
+    def __getattr__(self, k):
+        if k in self.__dict__:
+            return self.__dict__[k]
+        # we purposely let KeyError propagate up, if thrown
+        doc_key = self.keys[k]
+        if not doc_key:
+            doc_key = k
+        return self.doc.get(doc_key)
+
+
+class RelaySummary(_DocumentForwarder):
     def __init__(self, document):
-        self.nickname = document.get('n')
-        self.fingerprint = document.get('f')
-        self.addresses = document.get('a')
-        self.running = document.get('r')
+        self.doc = document
+        self.keys = dict(nickname='n', fingerprint='f', addresses='a',
+                         running='r')
 
     def __str__(self):
         return "Relay summary for %s (%s) " % \
@@ -46,11 +59,10 @@ class RelaySummary(BaseClass):
                 "<No fingerprint>")
 
 
-class BridgeSummary(BaseClass):
+class BridgeSummary(_DocumentForwarder):
     def __init__(self, document):
-        self.nickname = document.get('n')
-        self.hash = document.get('h')
-        self.running = document.get('r')
+        self.doc = document
+        self.keys = dict(nickname='n', hash='h', running='r')
 
     def __str__(self):
         return "Bridge summary for %s (%s) " % \
@@ -58,10 +70,10 @@ class BridgeSummary(BaseClass):
                 "<No fingerprint>")
 
 
-class Summary(BaseClass):
+class Summary(_DocumentForwarder):
     def __init__(self, document):
-        self.relays_published = document.get('relays_published')
-        self.bridges_published = document.get('bridges_published')
+        self.doc = document
+        self.keys = dict(relays_published=None, bridges_published=None)
         self.relays = [RelaySummary(d) for d in document.get('relays')]
         self.bridges = [BridgeSummary(d) for d in document.get('bridges')]
 
@@ -70,42 +82,30 @@ class Summary(BaseClass):
             (len(self.bridges or []), len(self.relays or []))
 
 
-class RelayDetails(BaseClass):
+class RelayDetails(_DocumentForwarder):
     def __init__(self, document):
-        g = document.get
-        self.nickname = g('nickname')
-        self.fingerprint = g('fingerprint')
-        self.or_addresses = g('or_addresses')
-        self.exit_addresses = g('exit_addresses')
-        self.dir_address = g('dir_address')
-        self.last_seen = g('last_seen')
-        self.last_changed_address_or_port = g('last_changed_address_or_port')
-        self.first_seen = g('first_seen')
-        self.running = g('running')
-        self.hibernating = g('hibernating')
-        self.flags = g('flags')
-        self.geo = (g('country'), g('country_name'), g('region_name'),
-                    g('city_name'), g('latitude'), g('longitude'))
-        self.as_number = g('as_number')
-        self.as_name = g('as_name')
-        self.consensus_weight = g('consensus_weight')
-        self.host_name = g('host_name')
-        self.last_restarted = g('last_restarted')
-        self.bandwidth = (g('bandwidth_rate'), g('bandwidth_burst'),
-                          g('bandwidth_observed'), g('bandwidth_advertised'))
-        self.exit_policy = g('exit_policy')
-        self.exit_policy_summary = g('exit_summary_policy')
-        self.exit_policy_v6_summary = g('exit_policy_v6_policy')
-        self.contact = g('contact')
-        self.platform = g('platform')
-        self.recommended_version = g('recommended_version')
-        self.family = g('family')
-        self.advertised_bandwidth_fraction = \
-            g('advertised_bandwidth_fraction')
-        self.consensus_weight_fraction = g('consensus_weight_fraction')
-        self.guard_probability = g('guard_probability')
-        self.middle_probability = g('middle_probability')
-        self.exit_probability = g('exit_probability')
+        self.doc = document
+        self.keys = dict(nickname=None, fingerprint=None, or_addresses=None,
+                         exit_addresses=None, dir_address=None,
+                         last_seen=None, last_changed_address_or_port=None,
+                         first_seen=None, running=None, hibernating=None,
+                         flags=None, as_number=None, as_name=None,
+                         consensus_weight=None, host_name=None,
+                         last_restarted=None, exit_policy=None,
+                         exit_policy_summary=None,
+                         exit_policy_v6_summary=None, contact=None,
+                         platform=None, recommended_version=None, family=None,
+                         advertised_bandwidth_fraction=None,
+                         consensus_weight_fraction=None,
+                         guard_probability=None, middle_probability=None,
+                         exit_probability=None)
+        self.geo = (self.doc.get('country'), self.doc.get('country_name'),
+                    self.doc.get('region_name'), self.doc.get('city_name'),
+                    self.doc.get('latitude'), self.doc.get('longitude'))
+        self.bandwidth = (self.doc.get('bandwidth_rate'),
+                          self.doc.get('bandwidth_burst'),
+                          self.doc.get('bandwidth_observed'),
+                          self.doc.get('bandwidth_advertised'))
 
     def __str__(self):
         return "Detailed relay descriptor for %s (%s)" % \
@@ -113,20 +113,14 @@ class RelayDetails(BaseClass):
                 "<No fingerprint>")
 
 
-class BridgeDetails(BaseClass):
+class BridgeDetails(_DocumentForwarder):
     def __init__(self, document):
-        g = document.get
-        self.nickname = g('nickname')
-        self.hashed_fingerprint = g('hashed_fingerprint')
-        self.or_address = g('or_address')
-        self.last_seen = g('last_seen')
-        self.first_seen = g('first_seen')
-        self.running = g('running')
-        self.flags = g('flags')
-        self.last_restarted = g('last_restarted')
-        self.advertised_bandwidth = g('advertised_bandwidth')
-        self.platform = g('platform')
-        self.pool_assignment = g('pool_assignment')
+        self.doc = document
+        self.keys = dict(nickname=None, hashed_fingerprint=None,
+                         or_address=None, last_seen=None, first_seen=None,
+                         running=None, flags=None, last_restarted=None,
+                         advertised_bandwidth=None, platform=None,
+                         pool_assignment=None)
 
     def __str__(self):
         return "Detailed bridge descriptor for %s (%s)" % \
@@ -134,89 +128,83 @@ class BridgeDetails(BaseClass):
                 "<No fingerprint>")
 
 
-class Details(BaseClass):
+class Details(_DocumentForwarder):
     def __init__(self, document):
-        self.relays_published = document.get('relays_published')
-        self.bridges_published = document.get('bridges_published')
-        self.relays = [RelayDetails(d) for d in document.get('relays')]
-        self.bridges = [BridgeDetails(d) for d in document.get('bridges')]
+        self.doc = document
+        self.keys = dict(relays_published=None, bridges_published=None)
+        self.relays = [RelayDetails(d) for d in self.doc.get('relays')]
+        self.bridges = [BridgeDetails(d) for d in self.doc.get('bridges')]
 
     def __str__(self):
         return "Details document (%d bridges, %d relays)" % \
             (len(self.bridges or []), len(self.relays or []))
 
 
-class GraphHistory(BaseClass):
+class GraphHistory(_DocumentForwarder):
     def __init__(self, document):
-        g = document.get
-        self.first = g('first')
-        self.last = g('last')
-        self.interval = g('interval')
-        self.factor = g('factor')
-        self.count = g('count')
-        self.values = g('values')
+        self.doc = document
+        self.keys = dict(first=None, last=None, interval=None, factor=None,
+                         count=None, values=None)
 
     def __str__(self):
         return "Graph history object"
 
 
-class BandwidthDetail(BaseClass):
+class BandwidthDetail(_DocumentForwarder):
     def __init__(self, document):
-        g = document.get
-        self.finger_print = g('fingerprint')
+        self.doc = document
+        self.keys = dict(fingerprint=None)
         self.write_history = dict([(k, GraphHistory(v)) for k, v in
-                                  g('write_history').items()])
+                                  self.doc.get('write_history').items()])
         self.read_history = dict([(k, GraphHistory(v)) for k, v in
-                                  g('read_history').items()])
+                                  self.doc.get('read_history').items()])
 
     def __str__(self):
         return "Bandwidth object"
 
 
-class Bandwidth(BaseClass):
+class Bandwidth(_DocumentForwarder):
     def __init__(self, document):
-        g = document.get
-        self.relays_published = g('relays_published')
-        self.bridges_published = g('bridges_published')
-        self.relays = [BandwidthDetail(d) for d in g('relays')]
-        self.bridges = [BandwidthDetail(d) for d in g('bridges')]
+        self.doc = document
+        self.keys = dict(relays_published=None, bridges_published=None)
+        self.relays = [BandwidthDetail(d) for d in self.doc.get('relays')]
+        self.bridges = [BandwidthDetail(d) for d in self.doc.get('bridges')]
 
     def __str__(self):
         return "Bandwidth document(histories of %d bridges and %d relays)" % \
             (len(self.bridges or []), len(self.relays or []))
 
 
-class RelayWeight(BaseClass):
+class RelayWeight(_DocumentForwarder):
     def __init__(self, document):
-        g = document.get
-        self.fingerprint = g('fingerprint')
+        self.doc = document
+        self.keys = dict(fingerprint=None)
         self.advertised_bandwidth_fraction = \
             dict([(k, GraphHistory(v)) for k, v in
-                  g('advertised_bandwidth_fraction').items()])
+                  self.doc.get('advertised_bandwidth_fraction').items()])
         self.consensus_weight_fraction = \
             dict([(k, GraphHistory(v)) for k, v in
-                  g('consensus_weight_fraction').items()])
+                  self.doc.get('consensus_weight_fraction').items()])
         self.guard_probability = \
             dict([(k, GraphHistory(v)) for k, v in
-                  g('guard_probability').items()])
+                  self.doc.get('guard_probability').items()])
         self.middle_probability = \
             dict([(k, GraphHistory(v)) for k, v in
-                  g('middle_probability').items()])
+                  self.doc.get('middle_probability').items()])
         self.exit_probability = \
             dict([(k, GraphHistory(v)) for k, v in
-                  g('exit_probability').items()])
+                  self.doc.get('exit_probability').items()])
 
     def __str__(self):
         return "relay weight object for %s" % (self.fingerprint or
                                                '<no fingerprint>')
 
 
-class Weights(BaseClass):
+class Weights(_DocumentForwarder):
     def __init__(self, document):
-        g = document.get
-        self.relays_published = g('relays_published')
-        self.bridges_published = g('bridges_published')
-        self.relays = [RelayWeight(d) for d in g('relays')]
+        self.doc = document
+        self.keys = dict(relays_published=None, bridges_published=None)
+        self.relays = [RelayWeight(d) for d in self.doc.get('relays')]
         self.bridges = []
 
     def __str__(self):
@@ -224,51 +212,51 @@ class Weights(BaseClass):
             (len(self.relays or []))
 
 
-class BridgeClient(BaseClass):
+class BridgeClient(_DocumentForwarder):
     def __init__(self, document):
-        g = document.get
-        self.fingerprint = g('fingerprint')
+        self.doc = document
+        self.keys = dict(fingerprint=None)
         self.average_clients = \
             dict([(k, GraphHistory(v)) for k, v in
-                  g('average_clients').items()])
+                  self.doc.get('average_clients').items()])
 
     def __str__(self):
         return "Bridge client history object for %s" % (self.fingerprint or
                                                         '<no fingerprint>')
 
 
-class Clients(BaseClass):
+class Clients(_DocumentForwarder):
     def __init__(self, document):
-        g = document.get
-        self.relays_published = g('relays_published')
-        self.bridges_published = g('bridges_published')
+        self.doc = document
+        self.keys = dict(relays_published=None, bridges_published=None)
         self.relays = []
-        self.bridges = [BridgeClient(d) for d in g('bridges')]
+        self.bridges = [BridgeClient(d) for d in self.doc.get('bridges')]
 
     def __str__(self):
         return "Clients document containing client histories for %d bridges" \
             % (len(self.bridges or []))
 
 
-class RelayUptime(BaseClass):
+class RelayUptime(_DocumentForwarder):
     def __init__(self, document):
-        g = document.get
-        self.fingerprint = g('fingerprint')
-        self.uptime = dict([(k, GraphHistory(v)) for k, v in
-                            g('uptime').items()])
+        self.doc = document
+        self.keys = dict(fingerprint=None)
+        self.uptime = {}
+        if 'uptime' in self.doc.keys():
+            self.uptime = dict([(k, GraphHistory(v)) for k, v in
+                                self.doc.get('uptime').items()])
 
     def __str__(self):
         return "Relay uptime history object for %s" % (self.fingerprint or
                                                        '<no fingerprint>')
 
 
-class Uptime(BaseClass):
+class Uptime(_DocumentForwarder):
     def __init__(self, document):
-        g = document.get
-        self.relays_published = g('relays_published')
-        self.bridges_published = g('bridges_published')
-        self.relays = [RelayUptime(d) for d in g('relays')]
-        self.bridges = [RelayUptime(d) for d in g('bridges')]
+        self.doc = document
+        self.keys = dict(relays_published=None, bridges_published=None)
+        self.relays = [RelayUptime(d) for d in self.doc.get('relays')]
+        self.bridges = [RelayUptime(d) for d in self.doc.get('bridges')]
 
     def __str__(self):
         return "Uptime document (Containing uptime histories for %d bridges\
@@ -312,6 +300,7 @@ class OnionooRequest(BaseClass):
         # Check if document requested is valid
         if doc_type.lower() not in self.DOC_TYPES.keys():
             raise InvalidDocumentTypeError(doc_type)
+        doc_type = doc_type.lower()
 
         # Check cache entries for similar request
         cache_entry = None
@@ -336,7 +325,7 @@ class OnionooRequest(BaseClass):
         elif req.status_code != requests.codes.OK:
             raise OnionooError(req.status_code, req.reason)
         else:
-            result = self.DOC_TYPES[doc_type](req.json())
+            result = self.DOC_TYPES[doc_type.lower()](req.json())
 
         response = OnionooResponse(headers=req.headers,
                                    status_code=req.status_code,
