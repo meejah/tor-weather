@@ -325,7 +325,7 @@ class OnionooRequest(BaseClass):
         elif req.status_code != requests.codes.OK:
             raise OnionooError(req.status_code, req.reason)
         else:
-            result = self.DOC_TYPES[doc_type.lower()](req.json())
+            result = self.DOC_TYPES[doc_type](req.json())
 
         response = OnionooResponse(headers=req.headers,
                                    status_code=req.status_code,
