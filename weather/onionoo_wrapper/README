@@ -1,0 +1,18 @@
+Onionoo Wrapper
+===============
+
+A python wrapper for the weather-rewrite project to fetch onionoo documents, developed from initial work by Lukas Erlacher (duk3luk3).
+
+
+Usage
+=====
+
+    >>> from onionoo_wrapper import *
+    >>> req = objects.OnionooRequest()
+    >>> doc_type = 'details'
+    >>> params = {
+            'type': 'relay',
+            'fields': ['nickname', 'fingerprint']
+        }
+    >>> resp = req.get_response(doc_type, params)
+
