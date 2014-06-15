@@ -302,8 +302,7 @@ class OnionooRequest(BaseClass):
 
         # Send the request
         req = requests.get(self.base_URL + doc_type,
-                           params=params,
-                           headers=headers)
+                           params=params)
 
         # Format result based on response code
         if req.status_code != requests.codes.OK:
