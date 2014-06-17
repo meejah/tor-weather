@@ -8,39 +8,38 @@ from onionoo_wrapper.utilities import *
 from onionoo_wrapper.objects import *
 
 
+class FakeRelay:
+    def __init__(self):
+        self.hibernating = True
+        self.flags = ["Fast", "Guard", "Running", "Stable", "V2Dir", "Valid"]
+        self.exit_policy_summary = {"reject":["1-65535"]}
+
+
 class TestChecks(unittest.TestCase):
     """ Test case for the relay checks """
 
-    def setup(self):
-        details_doc = open('details_doc').read()
-        self.relays = json.loads(details_doc)['relays']
+    def setUp(self):
+        self.relay = FakeRelay()
 
     def test_stable(self):
-        relay_obj = RelayDetails(self.relays[0])
-        stable_check = checks.is_stable(relay_obj)
+        stable_check = checks.is_stable(self.relay)
         self.assertTrue(stable_check)
 
-        relay_obj = RelayDetails(self.relays[1])
-        stable_check = checks.is_stable(relay_obj)
+        self.relay.flags.remove("Stable")
+        stable_check = checks.is_stable(self.relay)
         self.assertFalse(stable_check)
 
     def test_hibernating(self):
-        relay_obj = RelayDetails(self.relays[1])
-        hibernating_check = checks.is_hibernating(relay_obj)
+        hibernating_check = checks.is_hibernating(self.relay)
+        self.assertTrue(hibernating_check)
+
+        self.relay.hibernating = False
+        hibernating_check = checks.is_hibernating(self.relay)
         self.assertFalse(hibernating_check)
 
-        relay_obj = RelayDetails(self.relays[2])
-        hibernating_check = checks.is_hibernating(relay_obj)
-        self.assertTrue(hibernating_check)
-        
     def test_exitport(self):
-        relay_obj = RelayDetails(self.relays[0])
-        exit_check = checks.check_exitport(relay_obj)
-        self.assertFalse(stable_check)
-        
-        relay_obj = RelayDetails(self.relays[1])
-        exit_check = checks.check_exitport(relay_obj)
-        self.assertFalse(stable_check)
+        exit_check = checks.check_exitport(self.relay)
+        self.assertFalse(exit_check)
 
 if __name__ == '__main__':
     unittest.main()

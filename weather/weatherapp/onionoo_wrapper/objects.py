@@ -18,6 +18,15 @@ class InvalidDocumentTypeError(BaseError):
         return 'Invalid document type ' + repr(self.doc_type)
 
 
+class InvalidParameterError(BaseError):
+    """ Raised when a request parameter is not supported by Onionoo """
+    def __init__(self, param):
+        self.param = param
+
+    def __str__(self):
+        return 'Invalid parameter ' + repr(self.param)
+
+
 class OnionooError(BaseError):
     """ Raised when Onionoo responds with an error code """
     def __init__(self, code, msg):
@@ -285,6 +294,22 @@ class OnionooRequest(BaseClass):
         'clients': Clients,
         'uptime': Uptime
     }
+    PARAMETERS = [
+        'type',
+        'running',
+        'search',
+        'lookup',
+        'country',
+        'as',
+        'flag',
+        'first_seen_days',
+        'last_seen_says',
+        'contact',
+        'fields',
+        'order',
+        'offset',
+        'limit'
+    ]
 
     def __init__(self, host=None):
         self.base_URL = host or self.ONIONOO_URL
@@ -300,12 +325,17 @@ class OnionooRequest(BaseClass):
             raise InvalidDocumentTypeError(doc_type)
         doc_type = doc_type.lower()
 
+        # Check if request parameters are valid
+        for param in params.keys():
+            if param not in self.PARAMETERS:
+                raise InvalidParameterError(param)
+
         # Send the request
         req = requests.get(self.base_URL + doc_type,
                            params=params)
 
         # Format result based on response code
-        if req.status_code != requests.codes.OK:
+        if req.status_code != 200:
             raise OnionooError(req.status_code, req.reason)
         else:
             result = self.DOC_TYPES[doc_type](req.json())

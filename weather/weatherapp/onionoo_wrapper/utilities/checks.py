@@ -9,8 +9,8 @@ def is_stable(relay):
 
 
 def is_hibernating(relay):
-    """ Return true if hibernating field set to true, false otherwise """
-    return relay.hibernating == true
+    """ Return True if hibernating field set to True, false otherwise """
+    return relay.hibernating == True
 
 
 def check_in_ports(ports):
@@ -27,7 +27,7 @@ def check_in_ports(ports):
 
 
 def check_exitport(relay):
-    """ Return true if relay allows traffic to exit through port 80 """
+    """ Return True if relay allows traffic to exit through port 80 """
 
     exit_policy = relay.exit_policy_summary
     if 'accept' in exit_policy:

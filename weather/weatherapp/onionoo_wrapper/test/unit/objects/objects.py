@@ -3,79 +3,104 @@ Unit tests for the wrapper's onionoo objects
 """
 
 import unittest
-import requests
+import mock
+import onionoo_wrapper.objects
 from onionoo_wrapper.objects import *
+
+
+class FakeResponse:
+    def __init__(self, code):
+        self.status_code = code
+        self.headers = None
+        self.reason = ""
+    def json(self):
+        return {'relays':[], 'bridges':[]}
 
 
 class TestExceptions(unittest.TestCase):
     """ Test case for checking exceptions """
 
-    def setup(self):
+    def setUp(self):
         self.req = OnionooRequest()
 
     def test_invalid_document(self):
-        with self.assertRaises(InvalidDocumentTypeError)
+        with self.assertRaises(InvalidDocumentTypeError):
             self.req.get_response('invalid_document_type')
 
-    def test_onionoo_error(self):
-        with self.assertRaises(OnionooError)
+    def test_invalid_parameter(self):
+        with self.assertRaises(InvalidParameterError):
             self.req.get_response('details', params={'typo':'relay'})
+
+    @mock.patch('onionoo_wrapper.objects.requests')
+    def test_onionoo_error(self, mock_requests):
+        with self.assertRaises(OnionooError):
+            mock_requests.get.return_value = FakeResponse(400)
+            self.req.get_response('details', params={'type':'node'})
 
 
 class TestRequest(unittest.TestCase):
     """ Test case for the OnionooRequest object """
 
-    def setup(self):
+    def setUp(self):
         self.req = OnionooRequest()
 
-    def test_case_sensitivity(self):
-        resp_1 = self.req.get_response('details')
-        resp_2 = self.req.get_response('Details')
-        self.assertEqual(resp_1.document.doc, resp_2.document.doc)
+    @mock.patch('onionoo_wrapper.objects.requests')
+    def test_without_parameters(self, mock_requests):
+        mock_requests.get.return_value = FakeResponse(200)
+        self.req.get_response('details')
+        mock_requests.get.assert_called_with(self.req.ONIONOO_URL + 'details',
+            params={})
 
-    def test_with_parameters(self):
-        # can check with pre-downloaded document
-        resp_1 = self.req.get_response('details', params={'type':'relay', 'running':'true' })
-        normal_request = requests.get('https://onionoo.torproject.org/details', params={'type':'relay','running':'true'})
-        resp_2 = self.req.DOC_TYPES['details'](normal_request.json())
-        self.assertEqual(resp_1.document.doc, resp_2.document.doc)
-
-    def test_without_parameters(self):
-        resp_1 = self.req.get_response('details')
-        normal_request = requests.get('https://onionoo.torproject.org/details')
-        resp_2 = self.req.DOC_TYPES['details'](normal_request.json())
-        self.assertEqual(resp_1.document.doc, resp_2.document.doc)
+    @mock.patch('onionoo_wrapper.objects.requests')
+    def test_with_parameters(self, mock_requests):
+        mock_requests.get.return_value = FakeResponse(200)
+        self.req.get_response('details',
+            params={'type':'relay', 'running':'true'})
+        mock_requests.get.assert_called_with(self.req.ONIONOO_URL + 'details',
+            params={'type':'relay', 'running':'true'})
 
 
 class TestResponseType(unittest.TestCase):
     """ Test case for checking response document types """
 
-    def setup(self):
+    def setUp(self):
         self.req = OnionooRequest()
 
-    def test_summary_doc(self):
+    @mock.patch('onionoo_wrapper.objects.requests')
+    def test_summary_doc(self, mock_requests):
+        mock_requests.get.return_value = FakeResponse(200)
         resp = self.req.get_response('summary')
-        self.assertEqual(type(resp.document), objects.Summary)
+        self.assertEqual(type(resp.document), Summary)
 
-    def test_details_doc(self):
+    @mock.patch('onionoo_wrapper.objects.requests')
+    def test_details_doc(self, mock_requests):
+        mock_requests.get.return_value = FakeResponse(200)
         resp = self.req.get_response('details')
-        self.assertEqual(type(resp.document), objects.Details)
+        self.assertEqual(type(resp.document), Details)
 
-    def test_bandwidth_doc(self):
+    @mock.patch('onionoo_wrapper.objects.requests')
+    def test_bandwidth_doc(self, mock_requests):
+        mock_requests.get.return_value = FakeResponse(200)
         resp = self.req.get_response('bandwidth')
-        self.assertEqual(type(resp.document), objects.Bandwidth)
+        self.assertEqual(type(resp.document), Bandwidth)
 
-    def test_weights_doc(self):
+    @mock.patch('onionoo_wrapper.objects.requests')
+    def test_weights_doc(self, mock_requests):
+        mock_requests.get.return_value = FakeResponse(200)
         resp = self.req.get_response('weights')
-        self.assertEqual(type(resp.document), objects.Weights)
+        self.assertEqual(type(resp.document), Weights)
 
-    def test_clients_doc(self):
+    @mock.patch('onionoo_wrapper.objects.requests')
+    def test_clients_doc(self, mock_requests):
+        mock_requests.get.return_value = FakeResponse(200)
         resp = self.req.get_response('clients')
-        self.assertEqual(type(resp.document), objects.Clients)
+        self.assertEqual(type(resp.document), Clients)
 
-    def test_uptime_doc(self):
+    @mock.patch('onionoo_wrapper.objects.requests')
+    def test_uptime_doc(self, mock_requests):
+        mock_requests.get.return_value = FakeResponse(200)
         resp = self.req.get_response('uptime')
-        self.assertEqual(type(resp.document), objects.Uptime)
+        self.assertEqual(type(resp.document), Uptime)
 
 if __name__ == '__main__':
     unittest.main()
