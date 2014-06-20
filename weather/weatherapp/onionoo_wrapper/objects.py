@@ -3,7 +3,6 @@ Object definitions for the Onionoo wrapper
 """
 
 import requests
-import caching
 
 
 class BaseError(Exception):
@@ -17,6 +16,15 @@ class InvalidDocumentTypeError(BaseError):
 
     def __str__(self):
         return 'Invalid document type ' + repr(self.doc_type)
+
+
+class InvalidParameterError(BaseError):
+    """ Raised when a request parameter is not supported by Onionoo """
+    def __init__(self, param):
+        self.param = param
+
+    def __str__(self):
+        return 'Invalid parameter ' + repr(self.param)
 
 
 class OnionooError(BaseError):
@@ -286,10 +294,25 @@ class OnionooRequest(BaseClass):
         'clients': Clients,
         'uptime': Uptime
     }
+    PARAMETERS = [
+        'type',
+        'running',
+        'search',
+        'lookup',
+        'country',
+        'as',
+        'flag',
+        'first_seen_days',
+        'last_seen_says',
+        'contact',
+        'fields',
+        'order',
+        'offset',
+        'limit'
+    ]
 
-    def __init__(self, cache=None, host=None):
+    def __init__(self, host=None):
         self.base_URL = host or self.ONIONOO_URL
-        self.cache_client = cache or caching.SimpleCache()
 
     def get_response(self, doc_type, params={}):
         """
@@ -302,27 +325,17 @@ class OnionooRequest(BaseClass):
             raise InvalidDocumentTypeError(doc_type)
         doc_type = doc_type.lower()
 
-        # Check cache entries for similar request
-        cache_entry = None
-        cache_entry = self.cache_client.get(doc_type, params)
-
-        result = None
-        headers = {}
-        # Add header if there is a cache hit
-        if cache_entry is not None:
-            last_entry_time = cache_entry['timestamp']
-            headers['If-Modified-Since'] = last_entry_time
+        # Check if request parameters are valid
+        for param in params.keys():
+            if param not in self.PARAMETERS:
+                raise InvalidParameterError(param)
 
         # Send the request
         req = requests.get(self.base_URL + doc_type,
-                           params=params,
-                           headers=headers)
+                           params=params)
 
         # Format result based on response code
-        if cache_entry is not None and \
-           req.status_code == requests.codes.NOT_MODIFIED:
-            result = cache_entry['record']
-        elif req.status_code != requests.codes.OK:
+        if req.status_code != 200:
             raise OnionooError(req.status_code, req.reason)
         else:
             result = self.DOC_TYPES[doc_type](req.json())
@@ -330,10 +343,5 @@ class OnionooRequest(BaseClass):
         response = OnionooResponse(headers=req.headers,
                                    status_code=req.status_code,
                                    document=result)
-
-        # Update cache
-        cache_entry = {'timestamp': req.headers['date'],
-                       'record': result}
-        self.cache_client.set(doc_type, params, cache_entry)
 
         return response
