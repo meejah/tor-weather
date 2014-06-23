@@ -62,5 +62,5 @@ if __name__ == "__main__":
     for relay in relays:
         email_list.append(get_low_bandwidth_emails(relay))
         email_list.append(get_nodedown_emails(relay)
-    # Send welcome emails to the selected subscribers
+    # Send the notification emails to selected subscribers
     send_mass_mail(tuple(email_list), fail_silently=False)
