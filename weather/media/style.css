@@ -17,7 +17,7 @@ div#center {
 	}
 
 	div#banner {
-		background: url(http://weather.torproject.org/top-middle.png) repeat-x top left;
+		background: url(//weather.torproject.org/top-middle.png) repeat-x top left;
 		width: 100%;
 		overflow: auto;
 	}
