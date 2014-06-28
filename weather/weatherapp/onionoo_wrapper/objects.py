@@ -37,6 +37,15 @@ class OnionooError(BaseError):
         return str(self.code) + ' - ' + self.msg
 
 
+class DataError(BaseError):
+    """ Raised due to insufficient/inconsistent data """
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
 class BaseClass(object):
     pass
 

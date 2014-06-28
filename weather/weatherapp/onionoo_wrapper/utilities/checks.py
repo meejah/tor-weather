@@ -24,7 +24,6 @@ def is_bandwidth_low(relay, sub=None):
 
 def check_in_ports(ports):
     """ Checks if port 80 is present in the ports list """
-
     for entry in ports:
         if entry == '80':
             return True
@@ -37,11 +36,9 @@ def check_in_ports(ports):
 
 def check_exitport(relay):
     """ Return True if relay allows traffic to exit through port 80 """
-
     exit_policy = relay.exit_policy_summary
     if 'accept' in exit_policy:
         return check_in_ports(exit_policy['accept'])
     elif 'reject' in exit_policy:
         return not check_in_ports(exit_policy['reject'])
     return False
-
