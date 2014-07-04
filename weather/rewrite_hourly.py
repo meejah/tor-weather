@@ -19,21 +19,21 @@ def get_relays():
         'fields': 'nickname,fingerprint,observed_bandwidth,running'
     }
     details_doc = req.get_response('details', params=params)
-    return details_doc.relays
+    return details_doc.document.relays
 
 
 def get_low_bandwidth_emails(relay):
     """ Returns email-list of LowBandwidth subscribers to be notified """
     email_list = []
-    subsciptions = BandwidthSub.objects.filter
-    (subscriber__rouer__fingerprint=relay.fingerprint,
-     subscriber__confirmed=True)
+    subsciptions = BandwidthSub.objects.filter(
+        subscriber__rouer__fingerprint=relay.fingerprint,
+        subscriber__confirmed=True)
     for subcription in subscriptions:
         subscriber = subscription.subscriber
         low_bandwidth_check = checks.is_bandwidth_low(relay, subscription)
         if low_bandwidth_check is False:
             subscription.emailed = False
-        else if subscription.emailed is False:
+        elif subscription.emailed is False:
             subscription.emailed = True
             email = emails.bandwidth_tuple(subscriber.email,
                                            relay.fingerprint,
@@ -49,9 +49,9 @@ def get_low_bandwidth_emails(relay):
 def get_nodedown_emails(relay):
     """ Returns email-list of NodeDown subscribers to be notified """
     email_list = []
-    subsciptions = NodeDownSub.objects.filter
-    (subscriber__rouer__fingerprint=relay.fingerprint,
-     subscriber__confirmed=True)
+    subsciptions = NodeDownSub.objects.filter(
+        subscriber__rouer__fingerprint=relay.fingerprint,
+        subscriber__confirmed=True)
     for sub in subscriptions:
         if relay.running is True:
             if sub.triggered is True:
@@ -81,5 +81,6 @@ if __name__ == "__main__":
         if relay.running is True:
             email_list.append(get_low_bandwidth_emails(relay))
         email_list.append(get_nodedown_emails(relay))
+
     # Send the notification emails to selected subscribers
-    send_mass_mail(tuple(email_list), fail_silently=False)
+    # send_mass_mail(tuple(email_list), fail_silently=False)

@@ -5,7 +5,7 @@ https://trac.torproject.org/projects/tor/ticket/10705
 """
 
 from weatherapp import emails
-from weatherapp.models import Router, DeployedDatetime
+from weatherapp.models import Router, DeployedDatetime, hours_since
 
 from datetime import *
 from onionoo_wrapper.objects import *
@@ -25,13 +25,16 @@ def calculate_2mo_avg(relay, data_type):
     """ Calculates the average of values in 2-month time frame """
     # Check if required data is present in the relay object
     if data_type == 'uptime':
-        if '3_months' not in relay.uptime:
+        if hasattr(relay, 'uptime') and '3_months' in relay.uptime:
+            data = relay.uptime['3_months']
+        else:
             return -1
-        data = relay.uptime['3_months']
     elif data_type == 'bandwidth':
-        if '3_months' not in relay.write_history:
+        if hasattr(relay, 'write_history') and\
+        '3_months' in relay.write_history:
+            data = relay.write_history['3_months']
+        else:
             return -1
-        data = relay.write_history['3_months']
     # Sum up all values within past 2 months
     _sum = 0
     count = 0
@@ -45,6 +48,8 @@ def calculate_2mo_avg(relay, data_type):
                 _sum += (data.values[i])
                 count += 1
     # Calculate the result
+    if count == 0:
+        return 0
     return (_sum * data.factor) / count
 
 
@@ -88,7 +93,7 @@ def get_avg_bandwidth(relay):
 
 def add_router_entry(relay):
     """ Adds entry corresponding to the relay to the Router model """
-    is_exit = check_exitport(relay)
+    is_exit = checks.check_exitport(relay)
     router_entry = Router(fingerprint=relay.fingerprint,
                           name=relay.nickname,
                           welcomed=True,
@@ -96,6 +101,7 @@ def add_router_entry(relay):
                           up=True,
                           exit=is_exit)
     router_entry.save()
+    print len(Router.objects.all())
 
 
 def delete_old_router_entries():
@@ -147,16 +153,16 @@ def check_constraints(first_seen_check, exit_check, uptime, bandwidth):
 def check_welcome(relay_index, email_list):
     """ Implements welcome script functionality and returns welcome email """
     relay = relays_details[relay_index]
-    if is_stable(relay) and is_recent(relay):
+    if checks.is_stable(relay) and is_recent(relay):
         if Router.objects.get(fingerprint=relay.fingerprint) == []:
             # New relay so populate Router model and add to email list
             add_router_entry(relay)
-            email_id = scraper.deobfuscate_mail(relay.contact)
+            email_id = scraper.deobfuscate_mail(relay)
             if email_id != '':
                 email = emails.welcome_tuple(email_id,
                                              relay.fingerprint,
                                              relay.nickname,
-                                             check_exitport(relay))
+                                             checks.check_exitport(relay))
                 email_list.append(email)
     return email_list
 
@@ -164,8 +170,9 @@ def check_welcome(relay_index, email_list):
 def check_tshirt(relay_index, email_list):
     """ Implements tshirt script functionality and returns tshirt email """
     relay = relays_details[relay_index]
+    first_seen = datetime.strptime(relay.first_seen, TIME_FORMAT)
     first_seen_check = check_first_seen(relay)
-    exit_port_check = check_exitport(relay)
+    exit_port_check = checks.check_exitport(relay)
     uptime_percent = get_uptime_percent(relays_uptime[relay_index])
     avg_bandwidth = get_avg_bandwidth(relays_bandwidth[relay_index])
     if check_constraints(first_seen_check,
@@ -173,13 +180,13 @@ def check_tshirt(relay_index, email_list):
                          uptime_percent,
                          avg_bandwidth) is True:
         # Add to email list
-        email_id = scraper.deobfuscate_mail(relay.contact)
+        email_id = scraper.deobfuscate_mail(relay)
         email = emails.t_shirt_tuple(email_id,
                                      relay.fingerprint,
                                      relay.nickname,
                                      avg_bandwidth,
-                                     hours_since(relay.first_seen),
-                                     check_exitport(relay),
+                                     hours_since(first_seen),
+                                     checks.check_exitport(relay),
                                      "https://www.torproject.org",
                                      "https://www.torproject.org")
         email_list.append(email)
@@ -200,8 +207,8 @@ if __name__ == "__main__":
         email_list = check_welcome(relay_index, email_list)
         email_list = check_tshirt(relay_index, email_list)
 
-    # Send the emails to the selected operators
-    send_mass_mail(tuple(email_list), fail_silently=False)
+    # Send the emails to the selected operators/subscribers
+    # send_mass_mail(tuple(email_list), fail_silently=False)
 
     # Delete old Router entries from database
     delete_old_router_entries()

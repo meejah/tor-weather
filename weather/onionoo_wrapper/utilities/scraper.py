@@ -28,6 +28,8 @@ def deobfuscate_mail(relay):
     """
 
     contact = relay.contact
+    if contact is None:
+        return ""
     punct = string.punctuation
     clean_line = contact.replace('<', '').replace('>', '')
 
@@ -37,7 +39,6 @@ def deobfuscate_mail(relay):
                       clean_line, re.IGNORECASE)
 
     if email is None or email == "":
-        logger.debug("Couldn't parse an email address from line:\n%s" % contact)
         unparsable = open(UNPARSABLE, 'a')
         unparsable.write(contact.encode('utf-8') + '\n')
         unparsable.close()
