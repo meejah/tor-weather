@@ -22,3 +22,6 @@ control_port = 9051
 
 #The base URL for the Tor Weather web application:
 base_url = 'https://weather.dev'
+
+#This check should be True only in production
+check_deploy_time = False

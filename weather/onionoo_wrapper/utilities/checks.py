@@ -4,6 +4,7 @@ Regular checks made on the data received from Onionoo
 
 DEFAULT_THRESHOLD = 20 * 1024
 
+
 def is_stable(relay):
     """ Parse the RelayDetails object to check if the relay is stable """
     return 'Stable' in relay.flags
@@ -11,7 +12,7 @@ def is_stable(relay):
 
 def is_hibernating(relay):
     """ Return True if hibernating field set to True, false otherwise """
-    return relay.hibernating == True
+    return relay.hibernating is True
 
 
 def is_bandwidth_low(relay, sub=None):

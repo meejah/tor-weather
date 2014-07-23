@@ -3,6 +3,10 @@ Runs hourly and notifies subscribers if relays have been slow or down.
 Check out https://trac.torproject.org/projects/tor/ticket/10697
 """
 
+from django.core.management import setup_environ
+import settings
+setup_environ(settings)
+
 from weatherapp import emails
 from weatherapp.models import *
 
@@ -22,11 +26,10 @@ def get_relays():
     return details_doc.document.relays
 
 
-def get_low_bandwidth_emails(relay):
+def get_low_bandwidth_emails(relay, email_list):
     """ Returns email-list of LowBandwidth subscribers to be notified """
-    email_list = []
-    subsciptions = BandwidthSub.objects.filter(
-        subscriber__rouer__fingerprint=relay.fingerprint,
+    subscriptions = BandwidthSub.objects.filter(
+        subscriber__router__fingerprint=relay.fingerprint,
         subscriber__confirmed=True)
     for subcription in subscriptions:
         subscriber = subscription.subscriber
@@ -46,11 +49,10 @@ def get_low_bandwidth_emails(relay):
     return email_list
 
 
-def get_nodedown_emails(relay):
+def get_nodedown_emails(relay, email_list):
     """ Returns email-list of NodeDown subscribers to be notified """
-    email_list = []
-    subsciptions = NodeDownSub.objects.filter(
-        subscriber__rouer__fingerprint=relay.fingerprint,
+    subscriptions = NodeDownSub.objects.filter(
+        subscriber__router__fingerprint=relay.fingerprint,
         subscriber__confirmed=True)
     for sub in subscriptions:
         if relay.running is True:
@@ -79,8 +81,8 @@ if __name__ == "__main__":
     email_list = []
     for relay in relays:
         if relay.running is True:
-            email_list.append(get_low_bandwidth_emails(relay))
-        email_list.append(get_nodedown_emails(relay))
+            email_list = get_low_bandwidth_emails(relay, email_list)
+        email_list = get_nodedown_emails(relay, email_list)
 
     # Send the notification emails to selected subscribers
     # send_mass_mail(tuple(email_list), fail_silently=False)

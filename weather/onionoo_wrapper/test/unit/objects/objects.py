@@ -13,8 +13,9 @@ class FakeResponse:
         self.status_code = code
         self.headers = None
         self.reason = ""
+
     def json(self):
-        return {'relays':[], 'bridges':[]}
+        return {'relays': [], 'bridges': []}
 
 
 class TestExceptions(unittest.TestCase):
@@ -29,13 +30,13 @@ class TestExceptions(unittest.TestCase):
 
     def test_invalid_parameter(self):
         with self.assertRaises(InvalidParameterError):
-            self.req.get_response('details', params={'typo':'relay'})
+            self.req.get_response('details', params={'typo': 'relay'})
 
     @mock.patch('onionoo_wrapper.objects.requests')
     def test_onionoo_error(self, mock_requests):
         with self.assertRaises(OnionooError):
             mock_requests.get.return_value = FakeResponse(400)
-            self.req.get_response('details', params={'type':'node'})
+            self.req.get_response('details', params={'type': 'node'})
 
 
 class TestRequest(unittest.TestCase):
@@ -48,16 +49,17 @@ class TestRequest(unittest.TestCase):
     def test_without_parameters(self, mock_requests):
         mock_requests.get.return_value = FakeResponse(200)
         self.req.get_response('details')
-        mock_requests.get.assert_called_with(self.req.ONIONOO_URL + 'details',
-            params={})
+        mock_requests.get.assert_called_with(
+            self.req.ONIONOO_URL + 'details', params={})
 
     @mock.patch('onionoo_wrapper.objects.requests')
     def test_with_parameters(self, mock_requests):
         mock_requests.get.return_value = FakeResponse(200)
-        self.req.get_response('details',
-            params={'type':'relay', 'running':'true'})
-        mock_requests.get.assert_called_with(self.req.ONIONOO_URL + 'details',
-            params={'type':'relay', 'running':'true'})
+        self.req.get_response(
+            'details', params={'type': 'relay', 'running': 'true'})
+        mock_requests.get.assert_called_with(
+            self.req.ONIONOO_URL + 'details',
+            params={'type': 'relay', 'running': 'true'})
 
 
 class TestResponseType(unittest.TestCase):

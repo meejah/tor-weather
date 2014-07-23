@@ -46,7 +46,7 @@ def subscribe(request):
             try:
                 subscriber = form.create_subscriber()
             except Exception, e:
-                return HttpResponseRedirect(e)
+                return HttpResponseRedirect(str(e))
             else:
                 # Creates subscriptions based on form data
                 form.create_subscriptions(subscriber)

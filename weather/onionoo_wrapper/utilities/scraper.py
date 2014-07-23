@@ -12,7 +12,7 @@ logging.basicConfig(format=LOG_FMT)
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LVL)
 
-## CONSTANTS ##
+# CONSTANTS
 UNPARSABLE = 'unparsable-mail.log'
 
 
