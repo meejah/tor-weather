@@ -37,7 +37,7 @@ echo "Create ~/opt/current"
 echo "Set EMAIL_BACKEND"
 echo "Set EMAIL_FILE_PATH"
 useradd weather --groups debian-tor --create-home
-mkdir ~weather/opt/current
+mkdir -p ~/weather/opt/current
 grep EMAIL_BACKEND /home/weather/opt/current/weather/settings.py > /dev/null
 if [ $? -ne 0 ]; then
     cat >> /home/weather/opt/current/weather/settings.py << EOF
@@ -70,7 +70,7 @@ cat > /etc/apache2/sites-available/weather.dev << EOF
     ServerName weather.dev
     ErrorLog  /var/log/apache2/weather.dev-error.log
     CustomLog /var/log/apache2/weather.dev-access.log privacy
-    WSGIScriptAlias / /home/weather/opt/current//weather/weather.wsgi
+    WSGIScriptAlias / /home/weather/opt/current/weather/weather.wsgi
     RewriteEngine On
     RewriteRule ^(.*)$ https://%{SERVER_NAME}$1 [L,R]
 </VirtualHost>

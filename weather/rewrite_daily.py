@@ -4,8 +4,13 @@ Check out https://trac.torproject.org/projects/tor/ticket/11081 and
 https://trac.torproject.org/projects/tor/ticket/10705
 """
 
+from django.core.management import setup_environ
+import settings
+setup_environ(settings)
+
 from weatherapp import emails
-from weatherapp.models import Router, DeployedDatetime, hours_since
+from weatherapp.models import Router, DeployedDatetime, hours_since, TShirtSub
+from config import config
 
 from datetime import *
 from onionoo_wrapper.objects import *
@@ -30,7 +35,7 @@ def calculate_2mo_avg(relay, data_type):
         else:
             return -1
     elif data_type == 'bandwidth':
-        if hasattr(relay, 'write_history') and\
+        if hasattr(relay, 'write_history') and
         '3_months' in relay.write_history:
             data = relay.write_history['3_months']
         else:
@@ -51,6 +56,16 @@ def calculate_2mo_avg(relay, data_type):
     if count == 0:
         return 0
     return (_sum * data.factor) / count
+
+
+def get_uptime_percent(relay):
+    """ Calculates the relay's uptime from onionoo's uptime document """
+    return round(calculate_2mo_avg(relay, 'uptime') * 100, 2)
+
+
+def get_avg_bandwidth(relay):
+    """ Calculates relay's avg bandwidth from onionoo's bandwidth document """
+    return round(calculate_2mo_avg(relay, 'bandwidth') / 1000.0, 2)
 
 
 def get_cutoff_time():
@@ -81,16 +96,6 @@ def get_relays(doc_type):
     return doc.document.relays
 
 
-def get_uptime_percent(relay):
-    """ Calculates the relay's uptime from onionoo's uptime document """
-    return round(calculate_2mo_avg(relay, 'uptime') * 100, 2)
-
-
-def get_avg_bandwidth(relay):
-    """ Calculates relay's avg bandwidth from onionoo's bandwidth document """
-    return round(calculate_2mo_avg(relay, 'bandwidth') / 1000.0, 2)
-
-
 def add_router_entry(relay):
     """ Adds entry corresponding to the relay to the Router model """
     is_exit = checks.check_exitport(relay)
@@ -101,7 +106,6 @@ def add_router_entry(relay):
                           up=True,
                           exit=is_exit)
     router_entry.save()
-    print len(Router.objects.all())
 
 
 def delete_old_router_entries():
@@ -116,10 +120,13 @@ def delete_old_router_entries():
 
 def is_recent(relay):
     """ Returns True if relay is recent enough, False otherwise """
-    cutoff_time = get_cutoff_time()
-    deploy_time = get_deploy_time()
     first_seen = datetime.strptime(relay.first_seen, TIME_FORMAT)
-    time_diff = (first_seen - max(deploy_time, cutoff_time)).total_seconds()
+    cutoff_time = get_cutoff_time()
+    most_recent = cutoff_time
+    if config.check_deploy_time is True:
+        deploy_time = get_deploy_time()
+        most_recent = max(deploy_time, cutoff_time)
+    time_diff = (first_seen - most_recent).total_seconds()
     return (time_diff > 0)
 
 
@@ -154,7 +161,8 @@ def check_welcome(relay_index, email_list):
     """ Implements welcome script functionality and returns welcome email """
     relay = relays_details[relay_index]
     if checks.is_stable(relay) and is_recent(relay):
-        if Router.objects.get(fingerprint=relay.fingerprint) == []:
+        matches = Router.objects.filter(fingerprint=relay.fingerprint)
+        if not matches:
             # New relay so populate Router model and add to email list
             add_router_entry(relay)
             email_id = scraper.deobfuscate_mail(relay)
@@ -179,17 +187,21 @@ def check_tshirt(relay_index, email_list):
                          exit_port_check,
                          uptime_percent,
                          avg_bandwidth) is True:
-        # Add to email list
-        email_id = scraper.deobfuscate_mail(relay)
-        email = emails.t_shirt_tuple(email_id,
-                                     relay.fingerprint,
-                                     relay.nickname,
-                                     avg_bandwidth,
-                                     hours_since(first_seen),
-                                     checks.check_exitport(relay),
-                                     "https://www.torproject.org",
-                                     "https://www.torproject.org")
-        email_list.append(email)
+        # Collect subscriber's emails
+        subscriptions = TShirtSub.objects.filter(
+            subscriber__router__fingerprint=relay.fingerprint,
+            subscriber__confirmed=True, emailed=False)
+        for sub in subscriptions:
+            email = emails.t_shirt_tuple(sub.subscriber.email,
+                                         relay.fingerprint,
+                                         relay.nickname,
+                                         avg_bandwidth,
+                                         hours_since(first_seen),
+                                         exit_port_check,
+                                         sub.subscriber.unsubs_auth,
+                                         sub.subscriber.pref_auth)
+            email_list.append(email)
+            sub.emailed = True
     return email_list
 
 
@@ -206,6 +218,9 @@ if __name__ == "__main__":
     for relay_index in range(len(relays_details)):
         email_list = check_welcome(relay_index, email_list)
         email_list = check_tshirt(relay_index, email_list)
+
+    for email in email_list:
+        print email
 
     # Send the emails to the selected operators/subscribers
     # send_mass_mail(tuple(email_list), fail_silently=False)

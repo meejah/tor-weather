@@ -12,7 +12,7 @@ class FakeRelay:
     def __init__(self):
         self.hibernating = True
         self.flags = ["Fast", "Guard", "Running", "Stable", "V2Dir", "Valid"]
-        self.exit_policy_summary = {"reject":["1-65535"]}
+        self.exit_policy_summary = {"reject": ["1-65535"]}
         self.observed_bandwidth = 30 * 1024
 
 
