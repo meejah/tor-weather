@@ -37,7 +37,7 @@ echo "Create ~/opt/current"
 echo "Set EMAIL_BACKEND"
 echo "Set EMAIL_FILE_PATH"
 useradd weather --groups debian-tor --create-home
-mkdir -p ~/weather/opt/current
+mkdir ~weather/opt/current
 grep EMAIL_BACKEND /home/weather/opt/current/weather/settings.py > /dev/null
 if [ $? -ne 0 ]; then
     cat >> /home/weather/opt/current/weather/settings.py << EOF
