@@ -9,7 +9,7 @@ import settings
 setup_environ(settings)
 
 from weatherapp import emails
-from weatherapp.models import Router, DeployedDatetime, hours_since, TShirtSub
+from weatherapp.models import *
 from config import config
 
 from datetime import *
@@ -137,7 +137,7 @@ def check_first_seen(relay):
     return (today - first_seen).total_seconds() >= TWO_MONTHS
 
 
-def check_constraints(first_seen_check, exit_check, uptime, bandwidth):
+def check_tshirt_constraints(first_seen_check, exit_check, uptime, bandwidth):
     """ Returns True if T-shirt eligibility criteria are satisfied,
         False otherwise """
     if uptime == -1 or bandwidth == -1:
@@ -183,25 +183,55 @@ def check_tshirt(relay_index, email_list):
     exit_port_check = checks.check_exitport(relay)
     uptime_percent = get_uptime_percent(relays_uptime[relay_index])
     avg_bandwidth = get_avg_bandwidth(relays_bandwidth[relay_index])
-    if check_constraints(first_seen_check,
-                         exit_port_check,
-                         uptime_percent,
-                         avg_bandwidth) is True:
-        # Collect subscriber's emails
+    if check_tshirt_constraints(first_seen_check,
+                                exit_port_check,
+                                uptime_percent,
+                                avg_bandwidth) is True:
+        # Collect subscribers' emails
         subscriptions = TShirtSub.objects.filter(
             subscriber__router__fingerprint=relay.fingerprint,
             subscriber__confirmed=True, emailed=False)
-        for sub in subscriptions:
-            email = emails.t_shirt_tuple(sub.subscriber.email,
+        if len(subscriptions) == 0:
+            # No subscribers yet; Send email to operator only
+            email_id = scraper.deobfuscate_mail(relay)
+            email = emails.t_shirt_tuple(email_id,
                                          relay.fingerprint,
                                          relay.nickname,
                                          avg_bandwidth,
                                          hours_since(first_seen),
-                                         exit_port_check,
-                                         sub.subscriber.unsubs_auth,
-                                         sub.subscriber.pref_auth)
+                                         checks.check_exitport(relay),
+                                         "https://www.torproject.org",
+                                         "https://www.torproject.org")
             email_list.append(email)
-            sub.emailed = True
+            # Update operator's entry as subscription in the database
+            matches = Router.objects.filter(fingerprint=relay.fingerprint)
+            if not router_matches:
+                add_router_entry(relay)
+                router = Router.objects.get(fingerprint=relay.fingerprint)
+            else:
+                router = matches[0]
+            subscriber = Subscriber(email=email_id,
+                                    router=router,
+                                    confirmed=True)
+            subscriber.save()
+            tshirt_sub = TShirtSub(subscriber=subscriber,
+                                   emailed=True,
+                                   triggered=True,
+                                   avg_bandwidth=avg_bandwidth,
+                                   last_changed=first_seen)
+            tshirt_sub.save()
+        else:
+            for sub in subscriptions:
+                email = emails.t_shirt_tuple(sub.subscriber.email,
+                                             relay.fingerprint,
+                                             relay.nickname,
+                                             avg_bandwidth,
+                                             hours_since(first_seen),
+                                             exit_port_check,
+                                             sub.subscriber.unsubs_auth,
+                                             sub.subscriber.pref_auth)
+                email_list.append(email)
+                sub.emailed = True
     return email_list
 
 
