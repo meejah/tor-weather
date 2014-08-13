@@ -1,9 +1,10 @@
 """
-Runs daily and notifies new and t-shirt elligible relay operators.
-Check out https://trac.torproject.org/projects/tor/ticket/11081 and
-https://trac.torproject.org/projects/tor/ticket/10705
+A custom django-admin command to collect emails for daily notifications.
+This should be run as follows :
+$python manage.py rundaily
 """
 
+from django.core.management.base import BaseCommand, CommandError
 from django.core.management import setup_environ
 import settings
 setup_environ(settings)
@@ -247,26 +248,30 @@ def check_tshirt(relay_index, email_list):
     return email_list
 
 
-if __name__ == "__main__":
-    # Fetch relays data from Onionoo
-    relays_details = get_relays('details')
-    relays_uptime = get_relays('uptime')
-    relays_bandwidth = get_relays('bandwidth')
-    if not len(relays_details) == len(relays_uptime) == len(relays_bandwidth):
-        raise DataError("Inconsistent Onionoo data")
+class Command(BaseCommand):
+    help = 'Clears the Router and subscription models'
 
-    # Accumulate emails to be sent
-    email_list = []
-    for relay_index in range(len(relays_details)):
-        email_list = check_welcome(relay_index, email_list)
-        email_list = check_tshirt(relay_index, email_list)
+    def handle(self, *args, **options):
+        # Fetch relays data from Onionoo
+        global relays_details
+        global relays_uptime
+        global relays_bandwidth
+        relays_details = get_relays('details')
+        relays_uptime = get_relays('uptime')
+        relays_bandwidth = get_relays('bandwidth')
+        if not len(relays_details) == len(relays_uptime) == len(relays_bandwidth):
+            raise DataError("Inconsistent Onionoo data")
 
-    if email_list is not None:
-        for email in email_list:
-            print email
+        # Accumulate emails to be sent
+        email_list = []
+        for relay_index in range(len(relays_details)):
+            email_list = check_welcome(relay_index, email_list)
+            email_list = check_tshirt(relay_index, email_list)
 
-    # Send the emails to the selected operators/subscribers
-    # send_mass_mail(tuple(email_list), fail_silently=False)
+        # Send the emails to the selected operators/subscribers
+        #send_mass_mail(tuple(email_list), fail_silently=False)
 
-    # Delete old Router entries from database
-    delete_old_router_entries()
+        # Delete old Router entries from database
+        delete_old_router_entries()
+
+
