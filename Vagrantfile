@@ -57,7 +57,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # IMPORTANT:
   # In case you run into problems with mounting, see here:
   # https://stackoverflow.com/questions/22717428/vagrant-error-failed-to-mount-folders-in-linux-guest
-  config.vm.synced_folder ".", "/home/weather/opt/current"#, :nfs => true
+  config.vm.synced_folder ".", "/home/weather/opt/current",
+    id: "home-weather",
+    owner: "www-data",
+    group: "www-data",
+    mount_options: ["dmode=755,fmode=664"]
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.

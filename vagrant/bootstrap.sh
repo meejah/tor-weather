@@ -12,7 +12,7 @@ echo "Done!"
 echo "Installing software-stack..."
 apt-get install -y apache2 sqlite3 vim \
     libapache2-mod-wsgi tor \
-    python-pip python-django
+    python-pip python-django python-requests
 echo "Done installing software stack!"
 
 # modify torrc
