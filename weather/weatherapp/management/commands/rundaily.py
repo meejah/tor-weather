@@ -1,15 +1,16 @@
 """
-Runs daily and notifies new and t-shirt elligible relay operators.
-Check out https://trac.torproject.org/projects/tor/ticket/11081 and
-https://trac.torproject.org/projects/tor/ticket/10705
+A custom django-admin command to collect emails for daily notifications.
+This should be run as follows :
+$python manage.py rundaily
 """
 
+from django.core.management.base import BaseCommand, CommandError
 from django.core.management import setup_environ
 import settings
 setup_environ(settings)
 
 from weatherapp import emails
-from weatherapp.models import Router, DeployedDatetime, hours_since, TShirtSub
+from weatherapp.models import *
 from config import config
 
 from datetime import *
@@ -35,7 +36,7 @@ def calculate_2mo_avg(relay, data_type):
         else:
             return -1
     elif data_type == 'bandwidth':
-        if hasattr(relay, 'write_history') and
+        if hasattr(relay, 'write_history') and\
         '3_months' in relay.write_history:
             data = relay.write_history['3_months']
         else:
@@ -102,7 +103,7 @@ def add_router_entry(relay):
     router_entry = Router(fingerprint=relay.fingerprint,
                           name=relay.nickname,
                           welcomed=True,
-                          last_seen=relay.last_seen,
+                          last_seen=str(relay.last_seen),
                           up=True,
                           exit=is_exit)
     router_entry.save()
@@ -113,6 +114,7 @@ def delete_old_router_entries():
     cutoff_time = get_cutoff_time()
     deploy_time = get_deploy_time()
     for entry in Router.objects.all():
+        #last_seen = datetime.strptime(entry.last_seen, TIME_FORMAT)
         last_seen = entry.last_seen
         if (last_seen - max(deploy_time, cutoff_time)).total_seconds() < 0:
             entry.delete()
@@ -137,7 +139,7 @@ def check_first_seen(relay):
     return (today - first_seen).total_seconds() >= TWO_MONTHS
 
 
-def check_constraints(first_seen_check, exit_check, uptime, bandwidth):
+def check_tshirt_constraints(first_seen_check, exit_check, uptime, bandwidth):
     """ Returns True if T-shirt eligibility criteria are satisfied,
         False otherwise """
     if uptime == -1 or bandwidth == -1:
@@ -183,47 +185,93 @@ def check_tshirt(relay_index, email_list):
     exit_port_check = checks.check_exitport(relay)
     uptime_percent = get_uptime_percent(relays_uptime[relay_index])
     avg_bandwidth = get_avg_bandwidth(relays_bandwidth[relay_index])
-    if check_constraints(first_seen_check,
-                         exit_port_check,
-                         uptime_percent,
-                         avg_bandwidth) is True:
-        # Collect subscriber's emails
+    if check_tshirt_constraints(first_seen_check,
+                                exit_port_check,
+                                uptime_percent,
+                                avg_bandwidth) is True:
+        # Collect subscribers' emails
         subscriptions = TShirtSub.objects.filter(
             subscriber__router__fingerprint=relay.fingerprint,
             subscriber__confirmed=True, emailed=False)
-        for sub in subscriptions:
-            email = emails.t_shirt_tuple(sub.subscriber.email,
-                                         relay.fingerprint,
-                                         relay.nickname,
-                                         avg_bandwidth,
-                                         hours_since(first_seen),
-                                         exit_port_check,
-                                         sub.subscriber.unsubs_auth,
-                                         sub.subscriber.pref_auth)
-            email_list.append(email)
-            sub.emailed = True
+        if len(subscriptions) == 0:
+            # No subscribers yet; Check and send email to operator only
+            email_id = scraper.deobfuscate_mail(relay)
+            operator_sub = TShirtSub.objects.filter(
+                subscriber__router__fingerprint=relay.fingerprint,
+                subscriber__email=email_id, emailed=True)
+            if len(operator_sub) > 0:
+                # Relay operator already notified
+                return
+            else:
+                # Collect operator's email
+                email = emails.t_shirt_tuple(email_id,
+                                             relay.fingerprint,
+                                             relay.nickname,
+                                             avg_bandwidth,
+                                             hours_since(first_seen),
+                                             checks.check_exitport(relay),
+                                             "https://www.torproject.org",
+                                             "https://www.torproject.org")
+                email_list.append(email)
+            # Find relay entry in the Router model
+            matches = Router.objects.filter(fingerprint=relay.fingerprint)
+            if not matches:
+                relay.last_seen = datetime.now().strftime(TIME_FORMAT)
+                add_router_entry(relay)
+                router = Router.objects.get(fingerprint=relay.fingerprint)
+            else:
+                router = matches[0]
+            # Add operator entry in the Subscriber model
+            subscriber = Subscriber(email=email_id,
+                                    router=router,
+                                    confirmed=True)
+            subscriber.save()
+            # Add subscription entry for relay-operator in the TShirtSub model
+            tshirt_sub = TShirtSub(subscriber=subscriber,
+                                   emailed=True,
+                                   triggered=True,
+                                   avg_bandwidth=avg_bandwidth,
+                                   last_changed=first_seen)
+            tshirt_sub.save()
+        else:
+            for sub in subscriptions:
+                email = emails.t_shirt_tuple(sub.subscriber.email,
+                                             relay.fingerprint,
+                                             relay.nickname,
+                                             avg_bandwidth,
+                                             hours_since(first_seen),
+                                             exit_port_check,
+                                             sub.subscriber.unsubs_auth,
+                                             sub.subscriber.pref_auth)
+                email_list.append(email)
+                sub.emailed = True
     return email_list
 
 
-if __name__ == "__main__":
-    # Fetch relays data from Onionoo
-    relays_details = get_relays('details')
-    relays_uptime = get_relays('uptime')
-    relays_bandwidth = get_relays('bandwidth')
-    if not len(relays_details) == len(relays_uptime) == len(relays_bandwidth):
-        raise DataError("Inconsistent Onionoo data")
+class Command(BaseCommand):
+    help = 'Clears the Router and subscription models'
 
-    # Accumulate emails to be sent
-    email_list = []
-    for relay_index in range(len(relays_details)):
-        email_list = check_welcome(relay_index, email_list)
-        email_list = check_tshirt(relay_index, email_list)
+    def handle(self, *args, **options):
+        # Fetch relays data from Onionoo
+        global relays_details
+        global relays_uptime
+        global relays_bandwidth
+        relays_details = get_relays('details')
+        relays_uptime = get_relays('uptime')
+        relays_bandwidth = get_relays('bandwidth')
+        if not len(relays_details) == len(relays_uptime) == len(relays_bandwidth):
+            raise DataError("Inconsistent Onionoo data")
 
-    for email in email_list:
-        print email
+        # Accumulate emails to be sent
+        email_list = []
+        for relay_index in range(len(relays_details)):
+            email_list = check_welcome(relay_index, email_list)
+            email_list = check_tshirt(relay_index, email_list)
 
-    # Send the emails to the selected operators/subscribers
-    # send_mass_mail(tuple(email_list), fail_silently=False)
+        # Send the emails to the selected operators/subscribers
+        #send_mass_mail(tuple(email_list), fail_silently=False)
 
-    # Delete old Router entries from database
-    delete_old_router_entries()
+        # Delete old Router entries from database
+        delete_old_router_entries()
+
+

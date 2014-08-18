@@ -1,8 +1,10 @@
 """
-Runs hourly and notifies subscribers if relays have been slow or down.
-Check out https://trac.torproject.org/projects/tor/ticket/10697
+A custom django-admin command to collect emails for hourly notifications.
+This should be run as follows :
+$python manage.py runhourly
 """
 
+from django.core.management.base import BaseCommand, CommandError
 from django.core.management import setup_environ
 import settings
 setup_environ(settings)
@@ -75,14 +77,18 @@ def get_nodedown_emails(relay, email_list):
     return email_list
 
 
-if __name__ == "__main__":
-    # Fetch all running relays
-    relays = get_relays()
-    email_list = []
-    for relay in relays:
-        if relay.running is True:
-            email_list = get_low_bandwidth_emails(relay, email_list)
-        email_list = get_nodedown_emails(relay, email_list)
+class Command(BaseCommand):
+    help = 'Clears the Router and subscription models'
 
-    # Send the notification emails to selected subscribers
-    # send_mass_mail(tuple(email_list), fail_silently=False)
+    def handle(self, *args, **options):
+        # Fetch all running relays
+        relays = get_relays()
+        email_list = []
+        for relay in relays:
+            if relay.running is True:
+                email_list = get_low_bandwidth_emails(relay, email_list)
+            email_list = get_nodedown_emails(relay, email_list)
+
+        # Send the notification emails to selected subscribers
+        #send_mass_mail(tuple(email_list), fail_silently=False)
+
