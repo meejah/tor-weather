@@ -2,6 +2,9 @@
  
 echo "Starting provisioning!"
 
+# tell apt-get to work without a tty
+export DEBIAN_FRONTEND=noninteractive
+
 # update ubuntu package repo
 echo "Updating repos..."
 apt-get update > /dev/null
@@ -33,11 +36,11 @@ echo "Done!"
 # prep weather-settings
 echo "Prepping weather settings:"
 echo "Create weather user"
+useradd weather --groups debian-tor --create-home
 echo "Create ~/opt/current"
+mkdir -p ~weather/opt/current
 echo "Set EMAIL_BACKEND"
 echo "Set EMAIL_FILE_PATH"
-useradd weather --groups debian-tor --create-home
-mkdir ~weather/opt/current
 grep EMAIL_BACKEND /home/weather/opt/current/weather/settings.py > /dev/null
 if [ $? -ne 0 ]; then
     cat >> /home/weather/opt/current/weather/settings.py << EOF
@@ -92,14 +95,15 @@ echo "Done!"
 echo "Enabling virtualhost..."
 a2ensite weather.dev
 echo "Done!"
-echo "Restarting apache..."
-service apache2 restart
-echo "Done!"
 
 # sync weather
 echo "Syncing weather-db..."
-cd /home/weather/opt/current/weather && ./manage.py syncdb --noinput
+cd /home/weather/opt/current/weather && sudo -u www-data -H python manage.py syncdb --noinput
 echo "ATTENTION: auto-creation of superuser 'vagrant' with pw 'vagrant'!!"
+echo "Done!"
+
+echo "Restarting apache..."
+service apache2 restart
 echo "Done!"
 
 echo "Done provisioning!"
