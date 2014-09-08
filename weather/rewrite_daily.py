@@ -35,7 +35,7 @@ def calculate_2mo_avg(relay, data_type):
         else:
             return -1
     elif data_type == 'bandwidth':
-        if hasattr(relay, 'write_history') and
+        if hasattr(relay, 'write_history') and\
         '3_months' in relay.write_history:
             data = relay.write_history['3_months']
         else:
@@ -102,7 +102,7 @@ def add_router_entry(relay):
     router_entry = Router(fingerprint=relay.fingerprint,
                           name=relay.nickname,
                           welcomed=True,
-                          last_seen=relay.last_seen,
+                          last_seen=str(relay.last_seen),
                           up=True,
                           exit=is_exit)
     router_entry.save()
@@ -113,6 +113,7 @@ def delete_old_router_entries():
     cutoff_time = get_cutoff_time()
     deploy_time = get_deploy_time()
     for entry in Router.objects.all():
+        #last_seen = datetime.strptime(entry.last_seen, TIME_FORMAT)
         last_seen = entry.last_seen
         if (last_seen - max(deploy_time, cutoff_time)).total_seconds() < 0:
             entry.delete()
@@ -192,28 +193,39 @@ def check_tshirt(relay_index, email_list):
             subscriber__router__fingerprint=relay.fingerprint,
             subscriber__confirmed=True, emailed=False)
         if len(subscriptions) == 0:
-            # No subscribers yet; Send email to operator only
+            # No subscribers yet; Check and send email to operator only
             email_id = scraper.deobfuscate_mail(relay)
-            email = emails.t_shirt_tuple(email_id,
-                                         relay.fingerprint,
-                                         relay.nickname,
-                                         avg_bandwidth,
-                                         hours_since(first_seen),
-                                         checks.check_exitport(relay),
-                                         "https://www.torproject.org",
-                                         "https://www.torproject.org")
-            email_list.append(email)
-            # Update operator's entry as subscription in the database
+            operator_sub = TShirtSub.objects.filter(
+                subscriber__router__fingerprint=relay.fingerprint,
+                subscriber__email=email_id, emailed=True)
+            if len(operator_sub) > 0:
+                # Relay operator already notified
+                return
+            else:
+                # Collect operator's email
+                email = emails.t_shirt_tuple(email_id,
+                                             relay.fingerprint,
+                                             relay.nickname,
+                                             avg_bandwidth,
+                                             hours_since(first_seen),
+                                             checks.check_exitport(relay),
+                                             "https://www.torproject.org",
+                                             "https://www.torproject.org")
+                email_list.append(email)
+            # Find relay entry in the Router model
             matches = Router.objects.filter(fingerprint=relay.fingerprint)
-            if not router_matches:
+            if not matches:
+                relay.last_seen = datetime.now().strftime(TIME_FORMAT)
                 add_router_entry(relay)
                 router = Router.objects.get(fingerprint=relay.fingerprint)
             else:
                 router = matches[0]
+            # Add operator entry in the Subscriber model
             subscriber = Subscriber(email=email_id,
                                     router=router,
                                     confirmed=True)
             subscriber.save()
+            # Add subscription entry for relay-operator in the TShirtSub model
             tshirt_sub = TShirtSub(subscriber=subscriber,
                                    emailed=True,
                                    triggered=True,
@@ -249,8 +261,9 @@ if __name__ == "__main__":
         email_list = check_welcome(relay_index, email_list)
         email_list = check_tshirt(relay_index, email_list)
 
-    for email in email_list:
-        print email
+    if email_list is not None:
+        for email in email_list:
+            print email
 
     # Send the emails to the selected operators/subscribers
     # send_mass_mail(tuple(email_list), fail_silently=False)
