@@ -103,6 +103,8 @@ cd /home/weather/opt/current/weather && sudo -u www-data -H python manage.py syn
 echo "ATTENTION: auto-creation of superuser 'vagrant' with pw 'vagrant'!!"
 echo "Done!"
 
+
+
 echo "Restarting apache..."
 service apache2 restart
 echo "Done!"
