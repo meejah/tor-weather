@@ -1,0 +1,15 @@
+Integration Tests
+=================
+
+This is a start of a py.test-driven suite of Selenium tests that
+exercise a development instance of Tor Weather via https://weather.dev
+
+Run Them
+--------
+
+Once pytest and selenium are installed ("pip install pytest selenium"
+or "apt-get install python-pytest python-selenium" [FIXME reall?]):
+
+cd integ
+py.test
+
