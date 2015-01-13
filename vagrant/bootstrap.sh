@@ -94,6 +94,7 @@ EOF
 echo "Done!"
 echo "Enabling virtualhost..."
 a2ensite weather.dev
+a2dissite default
 echo "Done!"
 
 # sync weather
