@@ -49,3 +49,5 @@ TODO
  - huge TODO: can all these setup-shenanigans be handled via puppet?  Abhiram says: "Once the sym-links and directories are created, may be this task can be automated. Will think about this later."
  - Upgrade VM to latest Wheezy release.  We could ask Puppet to update the distro.  But that would mean everyone would have to download the new distro when starting the VM for the first time and whenever they run `vagrant provision`.  Maybe there are better ways.  Like, Puppet Labs releasing a new image.
  - Cron-tab with Puppet. Try to add the background task as a cron job using puppet.  Unless that's something we don't want in the development environment.  Let's postpone this.
+ - Needs cron-jobs for the "vagrant things" setup
+ - ^^ need to run immediately on first boot (in the right order! :( ) to get a valid database etc ready to go
