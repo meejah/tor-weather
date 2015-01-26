@@ -2,7 +2,7 @@ import pytest
 from selenium.webdriver import Firefox
 
 @pytest.fixture
-def driver(request, quit=True):
+def driver(request, quit=False):
     """
     """
     driver = Firefox()

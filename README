@@ -1,3 +1,46 @@
+--------------------------------------------------------------------------------
+HACKING on Tor weather:
+
+A brief history of this codebase: during 2014's GSoC, the existing
+Tor-weather code was (partially) re-written by a student (XXX); XXX
+added unit-tests; baunmanno provided OnionPy (for the OnionOO
+interface) which was copied internally, for various reasons. meejah
+then fixed some loose ends, did some cleanup + documentation and karsten
+will deploy it.
+
+The point of that is that there ARE still dark corners, un-factored
+bits and so on -- if something looks wrong or weird, it probably is,
+and pull-requests are gladly accepted.
+
+"vagrant up"
+should provide you with a dev environment; see Vagrant.md for more details
+(like what to add to /etc/hosts or DNS)
+
+"vagrant ssh" will give you a shell in the dev environment.
+
+FIXME/TODO:
+
+  . can we be more lazy? i.e. instead of rundaily, just do queries to OnionOO one relay at a time?
+
+  . failing unit-test from django.contrib.auth -- not sure how/why
+    these are even running...? but yeah. many stackoverflow things but
+    haven't found an answer
+
+    should answer this if I do find solution:
+    http://stackoverflow.com/questions/23304575/django-contrib-auth-test-failing-while-upgrading-django-from-1-4-to-1-5
+
+  . What are the magic incantations to get the database "alive"? (have
+    to run the daily etc. scripts in some order, I recall).
+
+  . need to disable default site
+
+  . should probably make the "Dev" cert a CA-which-signs-a-cert
+    instead of just a straight CA cert (apache warns, but still uses it).
+
+  . can/should we deploy behind nginx instead? (ask karsten?)
+--------------------------------------------------------------------------------
+ORIGINAL README:
+
 There should only be one running instance of this application. Please do not run it if you are not a Tor developer.
 
 This version of Tor Weather runs on Django version 1.2. It is incompatible with

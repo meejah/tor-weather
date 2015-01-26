@@ -103,6 +103,13 @@ cd /home/weather/opt/current/weather && sudo -u www-data -H python manage.py syn
 echo "ATTENTION: auto-creation of superuser 'vagrant' with pw 'vagrant'!!"
 echo "Done!"
 
+# run the commands that Sreenatha gave me, to "finish setting up the
+# database". XXX FIXME do we really need to do this in this manner?
+cd /home/weather/opt/current/weather
+export DJANGO_SETTINGS_MODULE=settings
+python manage.py clearmodels
+python manage.py rundaily
+python manage.py runhourly
 
 
 echo "Restarting apache..."
