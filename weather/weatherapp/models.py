@@ -28,6 +28,9 @@ from django import forms
 from django.core import validators
 from django.core.exceptions import ValidationError
 
+import onionoo
+from utilities import checks
+
 
 # HELPER FUNCTIONS ------------------------------------------------------------
 # ----------------------------------------------------------------------------- 
@@ -79,15 +82,23 @@ def hours_since(time):
 # -----------------------------------------------------------------------------
 
 class Router(models.Model):
-    """Model for Tor network routers. 
+    """Model for Tor network routers.
+
+    FIXME XXX This object as a database-thing should really just go
+    away -- it would be much simpler to just always live-query
+    OnionOO, and more-accurate. I am not going to remove this right
+    now, though, because Subscriber points to rows in here and I don't
+    want to make Karsten migrate his database.
+
+
     Django uses class variables to specify model fields, but these fields are
-    practically used and thought of as instance variables, so this 
+    practically used and thought of as instance variables, so this
     documentation will refer to them as such. Field types are specified as
     their Django field classes, with parentheses indicating the python type
-    they are validated against and are treated as practically. When 
-    constructing a L{Router} object, instance variables are specified as 
+    they are validated against and are treated as practically. When
+    constructing a L{Router} object, instance variables are specified as
     keyword arguments in L{Router} constructors.
-   
+
     @type _FINGERPRINT_MAX_LEN: int
     @cvar _FINGERPRINT_MAX_LEN: Maximum valid length for L{fingerprint}
         fields.
@@ -113,10 +124,11 @@ class Router(models.Model):
     @ivar up: Whether this L{Router} was up the last time a new consensus
         document was published. Default value is C{True}.
     @type exit: BooleanField (bool)
-    @ivar exit: Whether this L{Router} is an exit node (if it accepts exits 
+    @ivar exit: Whether this L{Router} is an exit node (if it accepts exits
         to port 80). Default is C{False}.
+
     """
-    
+
     _FINGERPRINT_MAX_LEN = 40
     _NAME_MAX_LEN = 100
     _DEFAULTS = { 'name': 'Unnamed',
@@ -137,7 +149,7 @@ class Router(models.Model):
     def __unicode__(self):
         """Returns a simple description of this L{Router}, namely its L{name}
         and L{fingerprint}.
-        
+
         @rtype: str
         @return: Simple description of L{Router} object.
         """
@@ -147,12 +159,14 @@ class Router(models.Model):
     def spaced_fingerprint(self):
         """Returns the L{fingerprint} for this L{Router} as a string with
         spaces inserted every 4 characters.
-        
+
         @rtype: str
         @return: The L{Router}'s L{fingerprint} with spaces inserted.
+
         """
 
         return insert_fingerprint_spaces(self.fingerprint)
+
 
 class Subscriber(models.Model):
     """Model for Tor Weather subscribers. 
@@ -197,7 +211,8 @@ class Subscriber(models.Model):
     @type sub_date: DateTimeField (datetime)
     @ivar sub_date: Datetime at which the L{Subscriber} subscribed. Default 
         value is the current time, evaluated by a call to C{datetime.now}.
-    """
+
+        """
 
     _EMAIL_MAX_LEN = 75
     _AUTH_MAX_LEN = 25
@@ -358,7 +373,7 @@ class Subscriber(models.Model):
                 grace_pd = n.grace_pd / (24 * 7)
             elif unit == 'D':
                 grace_pd = n.grace_pd / (24)
-            else: 
+            else:
                 grace_pd = n.grace_pd
             data['node_down_grace_pd'] = grace_pd
         else:
@@ -821,7 +836,7 @@ class GenericForm(forms.Form):
       
     _GET_NODE_DOWN_INIT = True
     _GET_NODE_DOWN_LABEL = 'Email me when the node is down'
-    _NODE_DOWN_GRACE_PD_INIT = 0
+    _NODE_DOWN_GRACE_PD_INIT = 1 # XXX FIXME if this is 0, default shit (js) doesn't work; why is it getting diff. default?!
     _NODE_DOWN_GRACE_PD_MAX = 4500
     _NODE_DOWN_GRACE_PD_MIN = 0
     _NODE_DOWN_GRACE_PD_LABEL = 'How long before we send a notifcation?'
@@ -1004,6 +1019,28 @@ class GenericForm(forms.Form):
 
         return data
 
+def refresh_router(fingerprint):
+    # FIXME XXX move somewhere else
+    doc = onionoo.relay_from_fingerprint(fingerprint)
+    add_router_entry(doc)
+
+def add_router_entry(relay):
+    '''XXX FIXME just copy/paste from rewrite_hourly -- get rid of all the redundant versions, and move this whereever refresh_router() goes to i guess
+
+    Adds entry corresponding to the relay to the Router model
+    '''
+    is_exit = checks.check_exitport(relay)
+    router_entry = Router(
+        fingerprint=relay.fingerprint,
+        name=relay.nickname,
+        welcomed=True,
+        last_seen=str(relay.last_seen),
+        up=True,
+        exit=is_exit
+    )
+    router_entry.save()
+
+
 class SubscribeForm(GenericForm):
     """Form for subscribing to Tor Weather. Inherits from L{GenericForm}.
     The L{SubscribeForm} class contains all the fields in the L{GenericForm}
@@ -1064,7 +1101,7 @@ class SubscribeForm(GenericForm):
             max_length=_FINGERPRINT_MAX_LEN)
     router_search = forms.CharField(label=_SEARCH_LABEL,
             max_length=_SEARCH_MAX_LEN,
-            widget=forms.TextInput(attrs={'id':_SEARCH_ID,                  
+            widget=forms.TextInput(attrs={'id':_SEARCH_ID,
                 'autocomplete': 'off'}),
             required=False)
 
@@ -1078,16 +1115,16 @@ class SubscribeForm(GenericForm):
             GenericForm.__init__(self, data)
 
     def clean(self):
-        """Called when the is_valid method is evaluated for a L{SubscribeForm} 
+        """Called when the is_valid method is evaluated for a L{SubscribeForm}
         after a POST request. Calls the same methods that the L{GenericForm}
-        L{clean<GenericForm.clean>} method does; also ensures that the two 
-        email fields match and fills in default values for 
+        L{clean<GenericForm.clean>} method does; also ensures that the two
+        email fields match and fills in default values for
         L{node_down_grace_pd} and L{band_low_threshold} fields if they are left
-        blank.        
+        blank.
         """
 
         data = self.cleaned_data
-        
+
         # Calls the generic clean() helper methods.
         GenericForm.check_if_sub_checked(self)
         GenericForm.convert_node_down_grace_pd_unit(self)
@@ -1107,7 +1144,7 @@ class SubscribeForm(GenericForm):
                 msg = 'Email addresses must match.'
                 self._errors['email_1'] = self.error_class([msg])
                 self._errors['email_2'] = self.error_class([msg])
-                
+
                 del data['email_1']
                 del data['email_2']
 
@@ -1120,9 +1157,11 @@ class SubscribeForm(GenericForm):
         if the fingerprint isn't in the database is inserted into the form
         through Django's automatic form error handling.
         """
-        
+
+        # FIXME is this really called? "git grep" sez no...
+
         fingerprint = self.cleaned_data.get('fingerprint')
-        
+
         # Removes spaces from fingerprint field.
         fingerprint = re.sub(r' ', '', fingerprint)
 
@@ -1147,46 +1186,57 @@ class SubscribeForm(GenericForm):
             the database; C{True} if it does, C{False} if it doesn't.
         """
 
-        # The router fingerprint field is unique, so we only need to worry
-        # about the router not existing, not there being two routers.
+        # if we don't find one, we query OnionOO
         try:
             Router.objects.get(fingerprint=fingerprint)
-        except Router.DoesNotExist:
-            return False
-        else:
             return True
+        except Router.DoesNotExist:
+            refresh_router(fingerprint)
+
+        try:
+            Router.objects.get(fingerprint=fingerprint)
+            return True
+        except Router.DoesNotExist:
+            pass
+        return False
 
     def create_subscriber(self):
         """Attempts to save the new subscriber, but throws a catchable error
         if a subscriber already exists with the given email and fingerprint.
-        PRE-CONDITION: fingerprint is a valid fingerprint for a 
+        PRE-CONDITION: fingerprint is a valid fingerprint for a
         router in the Router database.
         """
 
+        # XXX FIXME what is *supposed* to happen when subscribing to
+        # something not in the Router database? (i.e. how do these
+        # Routers get in the databse to start?)
         email = self.cleaned_data['email_1']
         fingerprint = self.cleaned_data['fingerprint']
         router = Router.objects.get(fingerprint=fingerprint)
+        ##router = onionoo.relay_from_fingerprint(fingerprint)
 
         # Get all subscribers that have both the email and fingerprint
-        # entered in the form. 
-        subscriber_query_set = Subscriber.objects.filter(email=email, 
-                                    router__fingerprint=fingerprint)
-        
+        # entered in the form.
+        subscriber_query_set = Subscriber.objects.filter(
+            email=email,
+            router__fingerprint=fingerprint
+        )
+
         # Redirect the user if such a subscriber exists, else create one.
         if subscriber_query_set.count() > 0:
             subscriber = subscriber_query_set[0]
-            url_extension = url_helper.get_error_ext('already_subscribed', 
+            url_extension = url_helper.get_error_ext('already_subscribed',
                                                subscriber.pref_auth)
-            raise Exception(url_extension)
+            raise RuntimeError(url_extension)
             #raise UserAlreadyExistsError(url_extension)
         else:
             subscriber = Subscriber(email=email, router=router)
             subscriber.save()
             return subscriber
- 
+
     def create_subscriptions(self, subscriber):
         """Create the subscriptions if they are specified.
-        
+
         @type subscriber: Subscriber
         @arg subscriber: The subscriber whose subscriptions are being saved.
         """
@@ -1205,11 +1255,11 @@ class SubscribeForm(GenericForm):
         if self.cleaned_data['get_t_shirt']:
             t_shirt_sub = TShirtSub(subscriber=subscriber)
             t_shirt_sub.save()
-         
+
 class PreferencesForm(GenericForm):
-    """The form for changing preferences, as displayed on the preferences 
-    page. The form displays the user's current settings for all subscription 
-    types (i.e. if they haven't selected a subscription type, the box for that 
+    """The form for changing preferences, as displayed on the preferences
+    page. The form displays the user's current settings for all subscription
+    types (i.e. if they haven't selected a subscription type, the box for that
     field is unchecked). The PreferencesForm form inherits L{GenericForm}.
 
     @type _USER_INFO_STR: str
@@ -1220,7 +1270,7 @@ class PreferencesForm(GenericForm):
     @type user_info: str
     @ivar user_info: The email, router name, and router fingerprint of C{user}.
     """
-    
+
     _USER_INFO_STR = '<p><span>Email:</span> %s</p> \
             <p><span>Router Name:</span> %s</p> \
             <p><span>Router Fingerprint:</span> %s</p>'

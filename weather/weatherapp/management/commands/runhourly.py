@@ -13,19 +13,17 @@ from weatherapp import emails
 from weatherapp.models import *
 
 from datetime import *
-from onionoo_wrapper.objects import *
-from onionoo_wrapper.utilities import *
+from onion_py.manager import Manager
 
 
 def get_relays():
     """ Returns a list of relays from Onionoo as RelayDetails objects """
-    req = OnionooRequest()
-    params = {
-        'type': 'relay',
-        'fields': 'nickname,fingerprint,observed_bandwidth,running'
-    }
-    details_doc = req.get_response('details', params=params)
-    return details_doc.document.relays
+    doc = Manager().query(
+        'details',
+        type='relay',
+        fields='nickname,fingerprint,observed_bandwidth,running'
+    )
+    return doc.relays
 
 
 def get_low_bandwidth_emails(relay, email_list):

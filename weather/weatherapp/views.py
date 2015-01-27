@@ -21,6 +21,9 @@ from django.http import HttpResponseRedirect, HttpRequest, Http404
 from django.http import HttpResponse
 from django.utils import simplejson
 
+import onionoo
+
+
 def home(request):
     """Displays a home page for Tor Weather with basic information about
     the application."""
@@ -33,7 +36,7 @@ def subscribe(request):
     redirects to the pending page if all of the fields were acceptable.
     If the user is already subscribed to that Tor node, they are sent to 
     an error page."""
-   
+
     if request.method != 'POST':
         # User hasn't submitted info, so just display empty subscribe form.
         form = SubscribeForm()
@@ -45,8 +48,9 @@ def subscribe(request):
             # subscriber failed because of the subscriber already existing
             try:
                 subscriber = form.create_subscriber()
-            except Exception, e:
-                return HttpResponseRedirect(str(e))
+            except RuntimeError as e:
+                # FIXME XXX WWWhhhhaaaA?!!
+                return HttpResponseRedirect(str(e.message))
             else:
                 # Creates subscriptions based on form data
                 form.create_subscriptions(subscriber)
@@ -61,12 +65,12 @@ def subscribe(request):
                                args=[addr, fingerprint, name, confirm_auth])
                 email_thread.setDaemon(True)
                 email_thread.start()
-        
+
                 # Redirect the user to the pending page.
                 #url_extension = url_helper.get_pending_ext(confirm_auth)
                 url_extension = url_helper.get_pending_ext(unsubs_auth)
                 return HttpResponseRedirect(url_extension)
-    
+
     c = {'form' : form}
 
     # For pages with POST methods, a Cross Site Request Forgery protection
@@ -344,15 +348,20 @@ def router_fingerprint_lookup(request):
         fingerprint.
     """
 
+    # NOTE FIXME I'm just aping the API that was here before. see the
+    # corresponding javascript, too.
     if request.method == 'GET':
         if u'query' in request.GET:
             router_name = request.GET[u'query']
             try:
-                router = Router.objects.get(name = router_name)
-            except Router.MultipleObjectsReturned:
-                json = simplejson.dumps('nonunique_name')
-            except Router.DoesNotExist:
-                json = simplejson.dumps('no_router')
-            else:
-                json = simplejson.dumps(router.spaced_fingerprint())
+                fp = onionoo.fingerprint_from_name(router_name)
+                json = simplejson.dumps(fp)
+            except onionoo.MultipleResultsError:
+                json = simplejson.dumps("nonunique_name")
+            except onionoo.NoResultsError:
+                json = simplejson.dumps("no_results")
+
             return HttpResponse(json, mimetype='application/json')
+    # FIXME didn't return anything previously, but should be
+    # appr. error like 404 or 500 or something.
+    return 'Error'

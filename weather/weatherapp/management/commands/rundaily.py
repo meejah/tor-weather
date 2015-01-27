@@ -11,20 +11,23 @@ setup_environ(settings)
 
 from weatherapp import emails
 from weatherapp.models import *
+from weatherapp.utilities import checks, scraper
 from config import config
 
 from datetime import *
-from onionoo_wrapper.objects import *
-from onionoo_wrapper.utilities import *
-
+from time import time
+#from onion_py.objects import *
+##from onion_py.utilities import *
+from onion_py.manager import Manager
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 TWO_MONTHS = 2 * 30 * 86400
 
 
-global relays_details
-global relays_uptime
-global relays_bandwidth
+manager = Manager()
+relays_details = None
+relays_uptime = None
+relays_bandwidth = None
 
 
 def calculate_2mo_avg(relay, data_type):
@@ -36,8 +39,9 @@ def calculate_2mo_avg(relay, data_type):
         else:
             return -1
     elif data_type == 'bandwidth':
-        if hasattr(relay, 'write_history') and\
-        '3_months' in relay.write_history:
+        if not relay.write_history:
+            print "NO HIST:", relay, relay.finger_print
+        if relay.write_history and '3_months' in relay.write_history:
             data = relay.write_history['3_months']
         else:
             return -1
@@ -88,13 +92,12 @@ def get_deploy_time():
 
 def get_relays(doc_type):
     """ Returns a list of relays from Onionoo as corresponding objects """
-    req = OnionooRequest()
-    params = {
-        'type': 'relay',
-        'running': 'true'
-    }
-    doc = req.get_response(doc_type, params=params)
-    return doc.document.relays
+    global manager
+    s = time()
+    doc = manager.query(doc_type)
+    ##    doc = req.get_response(doc_type, params=params)
+    diff = time() - s
+    return doc.relays
 
 
 def add_router_entry(relay):
@@ -161,8 +164,10 @@ def check_tshirt_constraints(first_seen_check, exit_check, uptime, bandwidth):
 
 def check_welcome(relay_index, email_list):
     """ Implements welcome script functionality and returns welcome email """
+    # XXX FIXME why are we checking is_stable? what if a non-stable
+    # relay owner wants to register? ditto for is_recent()
     relay = relays_details[relay_index]
-    if checks.is_stable(relay) and is_recent(relay):
+    if True:#is_recent(relay):## and checks.is_stable(relay):
         matches = Router.objects.filter(fingerprint=relay.fingerprint)
         if not matches:
             # New relay so populate Router model and add to email list
@@ -201,7 +206,7 @@ def check_tshirt(relay_index, email_list):
                 subscriber__email=email_id, emailed=True)
             if len(operator_sub) > 0:
                 # Relay operator already notified
-                return
+                return email_list # XXX FIXME: this codepath not tested, obviously
             else:
                 # Collect operator's email
                 email = emails.t_shirt_tuple(email_id,
@@ -260,14 +265,19 @@ class Command(BaseCommand):
         relays_uptime = get_relays('uptime')
         relays_bandwidth = get_relays('bandwidth')
         if not len(relays_details) == len(relays_uptime) == len(relays_bandwidth):
-            raise DataError("Inconsistent Onionoo data")
+            # FIXME XXX there was DataError here earlier
+            raise RuntimeError("Inconsistent Onionoo data")
 
+# XXX FIXME don't both return the list, and modify-in-place
+# better: email_list.append(check_welcome(relay_index))
+# XXX FIXME pass the details doc, not an index to global scope
         # Accumulate emails to be sent
         email_list = []
         for relay_index in range(len(relays_details)):
             email_list = check_welcome(relay_index, email_list)
             email_list = check_tshirt(relay_index, email_list)
 
+# XXX FIXME looks like should be enabled? why is this commented-out
         # Send the emails to the selected operators/subscribers
         #send_mass_mail(tuple(email_list), fail_silently=False)
 
