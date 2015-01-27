@@ -91,7 +91,11 @@ $(document).ready(function() {
 		var noRouterError = "Please enter a valid router name:";
 		var defaultLabel = "Enter router name, then click the arrow:";
 
-		$.getJSON("/router_fingerprint_lookup/?query=" + searchField.val(), function(json) {
+                // users like feedback, right?
+                searchLabel.html("Searching...");
+	        searchLabel.removeClass("form-error");
+
+		$.getJSON("/router_fingerprint_lookup?query=" + searchField.val(), function(json) {
 			if (json == "nonunique_name") {
 				fingerprintField.val("");
 				searchLabel.html(nonuniqueError);
