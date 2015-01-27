@@ -14,8 +14,10 @@ def driver(request, quit=False):
 
 @pytest.fixture
 def clean_data():
+    '''
+    Clears all the databases and deletes any accumulated confirmation emails.
+    '''
     with cd('..'):
-        print "clearmodels"
         local('vagrant ssh -c "sudo su www-data -c \'cd /home/weather/opt/current/weather && python ./manage.py clearmodels\'"')
-    print "nuke emails"
     local('rm -f ../vagrant-emails/*')
+    local('mkdir -p ../vagrant-emails')

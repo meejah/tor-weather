@@ -10,6 +10,7 @@ from fabric.api import local
 @pytest.mark.incremental
 class TestFullRegistration:
     def test_subscribe(self, driver, clean_data):
+        '''confirm we can subscribe'''
         # setup
         driver.get('https://weather.dev')
 
@@ -32,6 +33,7 @@ class TestFullRegistration:
 
     @pytest.fixture
     def confirmation_email(self):
+        '''Collect our one (and only) email, returned as list-of-strings (each line)'''
         # find our email, from the vagrant box
         email_path = '../vagrant-emails'
         emails = listdir(email_path)
@@ -40,7 +42,7 @@ class TestFullRegistration:
             return f.readlines()
 
     def test_confirmation_email(self, driver, confirmation_email):
-        # ensure we have the correct hash in the email somewhere
+        '''ensure we have the correct hash in the email somewhere'''
         assert(
             filter(
                 lambda x: 'B69D 45E2 AC49 A81E 0144 25FF 6E07 C743 5C9F 89B0' in x,
@@ -49,7 +51,7 @@ class TestFullRegistration:
         )
 
     def test_confirmation_link(self, driver, confirmation_email):
-        # grab our confirmation link
+        '''confirm the confirmation link works'''
         matcher = re.compile(r'(https://weather\.dev/confirm/.*)')
         urls = filter(
             lambda x: x is not None,
@@ -65,6 +67,8 @@ class TestFullRegistration:
 
         # did we get a "yay, you signed up!" page?
         assert('confirmation successful' in driver.title.lower())
+        # ...and is there an additional email, now?
+        assert(len(listdir('../vagrant-emails')) == 2)
 
     def test_unsubscribe(self, driver):
         driver.find_element_by_id("unsubscribe-link").click()
