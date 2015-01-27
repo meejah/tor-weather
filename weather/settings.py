@@ -116,4 +116,4 @@ EMAIL_HOST_USER = ''
 EMAIL_PORT = '25'
 EMAIL_USE_TLS = False
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = '/tmp/weather-messages'
+EMAIL_FILE_PATH = '/home/weather/opt/current/vagrant-emails/'
