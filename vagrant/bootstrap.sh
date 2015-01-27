@@ -16,6 +16,13 @@ echo "Installing software-stack..."
 apt-get install -y apache2 sqlite3 vim \
     libapache2-mod-wsgi tor \
     python-pip python-django python-requests
+
+# onion_py from our internal source -- ultimately, should get OnionPy
+# into Debian
+# FIXME FIXME XXX
+pushd /home/weather/opt/current/onion-py
+pip install -e .
+popd
 echo "Done installing software stack!"
 
 # modify torrc
@@ -45,7 +52,8 @@ grep EMAIL_BACKEND /home/weather/opt/current/weather/settings.py > /dev/null
 if [ $? -ne 0 ]; then
     cat >> /home/weather/opt/current/weather/settings.py << EOF
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = '/tmp/weather-messages'
+# FIXME XXX get this from ../weather/settings.py where appropriate
+EMAIL_FILE_PATH = '/home/weather/opt/current/vagrant-emails/'
 EOF
     echo "Done!"
 fi
@@ -108,8 +116,8 @@ echo "Done!"
 cd /home/weather/opt/current/weather
 export DJANGO_SETTINGS_MODULE=settings
 python manage.py clearmodels
-python manage.py rundaily
-python manage.py runhourly
+#python manage.py rundaily
+#python manage.py runhourly
 
 
 echo "Restarting apache..."
