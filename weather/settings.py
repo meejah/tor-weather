@@ -27,6 +27,10 @@ DATABASES = {
     }
 }
 
+#OO_HOST = 'https://onionoo.torproject.org/'
+# hits the fake_onionoo.py instance on Vagrant box; see integ/test_register.py
+OO_HOST = 'http://localhost:8888/'
+
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
@@ -115,5 +119,7 @@ EMAIL_HOST_PASSWORD = ''
 EMAIL_HOST_USER = ''
 EMAIL_PORT = '25'
 EMAIL_USE_TLS = False
+# XXX what if we just don't set these? do the "other" ones work then?
+# XXX no, they do not :(
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = '/home/weather/opt/current/vagrant-emails/'

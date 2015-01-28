@@ -6,6 +6,8 @@ refactor TWO codebases at a time.
 '''
 
 from onion_py.manager import Manager
+from django.conf import settings
+
 
 # FIXME fix up onion_py instead, this is just temporary for the most
 # part.
@@ -17,7 +19,7 @@ class NoResultsError(RuntimeError):
     pass
 
 def _query_helper(kind, **kw):
-    m = Manager()
+    m = Manager(onionoo_host=settings.OO_HOST)
     if 'limit' not in kw:
         kw['limit'] = 10
     doc = m.query(kind, **kw)

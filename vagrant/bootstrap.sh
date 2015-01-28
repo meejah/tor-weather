@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
- 
+
+# XXX FIXME this should be -- but is not -- "idempotent" (basically it
+# just appends stuff to a few files, so they'll have an extra copy
+# each run .. )
+
 echo "Starting provisioning!"
 
 # tell apt-get to work without a tty
@@ -11,10 +15,17 @@ apt-get update > /dev/null
 echo "Done!"
 #apt-get upgrade -y
 
-# install essentials
+# install what we need for Weather proper
 echo "Installing software-stack..."
+# for python-requests >= 2.0, we install backports
+cat >> /etc/apt/sources/list <<EOF
+# Backports repository
+deb http://ftp.debian.org/debian wheezy-backports main
+EOF
+apt-get update
+
 apt-get install -y apache2 sqlite3 vim \
-    libapache2-mod-wsgi tor \
+    libapache2-mod-wsgi \
     python-pip python-django python-requests
 
 # onion_py from our internal source -- ultimately, should get OnionPy
@@ -24,6 +35,11 @@ pushd /home/weather/opt/current/onion-py
 pip install -e .
 popd
 echo "Done installing software stack!"
+
+echo "Installing things for running tests"
+apt-get install -y python-dev
+pip install cyclone
+echo "Done with testing installs"
 
 # modify torrc
 echo "Setting torrc accordingly..."

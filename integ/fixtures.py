@@ -3,7 +3,7 @@ from selenium.webdriver import Firefox
 from fabric.api import cd, local
 
 @pytest.fixture(scope="module")
-def driver(request, quit=False):
+def driver(request, quit=True):
     """
     """
     driver = Firefox()
