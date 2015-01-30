@@ -1,0 +1,3 @@
+[submodule "onion-py"]
+	path = onion-py
+	url = git@github.com:meejah/onion-py.git
