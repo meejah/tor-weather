@@ -12,6 +12,9 @@ The point of that is that there ARE still dark corners, un-factored
 bits and so on -- if something looks wrong or weird, it probably is,
 and pull-requests are gladly accepted.
 
+NOTE that this uses a submodule for onion-py currently; you must do
+"git submodule init" after cloning.
+
 "vagrant up"
 should provide you with a dev environment; see Vagrant.md for more details
 (like what to add to /etc/hosts or DNS)

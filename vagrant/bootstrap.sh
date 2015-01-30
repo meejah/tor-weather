@@ -18,7 +18,7 @@ echo "Done!"
 # install what we need for Weather proper
 echo "Installing software-stack..."
 # for python-requests >= 2.0, we install backports
-cat >> /etc/apt/sources/list <<EOF
+cat >> /etc/apt/sources.list <<EOF
 # Backports repository
 deb http://ftp.debian.org/debian wheezy-backports main
 EOF
@@ -27,6 +27,16 @@ apt-get update
 apt-get install -y apache2 sqlite3 vim \
     libapache2-mod-wsgi \
     python-pip python-django python-requests
+
+# prep weather-settings
+if [ ! -d /home/weather ] ; then
+    echo "Prepping weather settings:"
+    echo "Create weather user"
+    useradd weather --create-home
+    echo "Create ~/opt/current"
+    mkdir -p ~weather/opt/current
+    echo "Done!"
+fi
 
 # onion_py from our internal source -- ultimately, should get OnionPy
 # into Debian
@@ -40,30 +50,6 @@ echo "Installing things for running tests"
 apt-get install -y python-dev
 pip install cyclone
 echo "Done with testing installs"
-
-# modify torrc
-echo "Setting torrc accordingly..."
-sudo -s
-cat >> /etc/tor/torrc << EOF
-FetchDirInfoEarly 1
-FetchUselessDescriptors 1
-ControlPort 9051
-HashedControlPassword 16:067C5B9B7B036EEE603814A6F045B9EEE0B40EA60192506C005D64E436
-EOF
-echo "Done!"
-
-echo "Reloading tor service..."
-service tor reload
-echo "Done!"
-
-# prep weather-settings
-echo "Prepping weather settings:"
-echo "Create weather user"
-useradd weather --groups debian-tor --create-home
-echo "Create ~/opt/current"
-mkdir -p ~weather/opt/current
-echo "Done!"
-fi
 
 # generate ssl cert
 echo "Generating SSL certificate..."
