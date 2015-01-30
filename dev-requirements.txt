@@ -1,0 +1,12 @@
+Fabric==1.10.1
+-e git+https://github.com/duk3luk3/onion-py.git@dc9303e0e7146c3f150eb9ae469bdab9acba087b#egg=OnionPy-master
+argparse==1.2.1
+ecdsa==0.11
+ipython==2.3.1
+paramiko==1.15.2
+py==1.4.26
+pycrypto==2.6.1
+pytest==2.6.4
+requests==2.5.1
+selenium==2.44.0
+wsgiref==0.1.2
