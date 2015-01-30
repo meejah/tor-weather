@@ -18,26 +18,27 @@ should provide you with a dev environment; see Vagrant.md for more details
 
 "vagrant ssh" will give you a shell in the dev environment.
 
+To run the Selnium integration tests, you need to install everything
+in "dev-requirements.txt", and then go to the "integ" directory and
+run "py.test":
+
+   pip install -r dev-requirements.txt
+   cd integ
+   py.test
+
 FIXME/TODO:
 
   . can we be more lazy? i.e. instead of rundaily, just do queries to OnionOO one relay at a time?
 
-  . failing unit-test from django.contrib.auth -- not sure how/why
-    these are even running...? but yeah. many stackoverflow things but
-    haven't found an answer
-
-    should answer this if I do find solution:
-    http://stackoverflow.com/questions/23304575/django-contrib-auth-test-failing-while-upgrading-django-from-1-4-to-1-5
-
   . What are the magic incantations to get the database "alive"? (have
     to run the daily etc. scripts in some order, I recall).
-
-  . need to disable default site
 
   . should probably make the "Dev" cert a CA-which-signs-a-cert
     instead of just a straight CA cert (apache warns, but still uses it).
 
   . can/should we deploy behind nginx instead? (ask karsten?)
+
+
 --------------------------------------------------------------------------------
 ORIGINAL README:
 
