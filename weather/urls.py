@@ -1,4 +1,5 @@
-"""The urls.py module is standard to Django. It stores url patterns and their
+"""
+The urls.py module is standard to Django. It stores url patterns and their
 corresponding controllers (see views).
 
 @var urlpatterns: A set of tuples mapping url patterns to the controller they
@@ -20,16 +21,16 @@ urlpatterns = patterns('',
                         'weatherapp.views.confirm_pref'),
     (r'^fingerprint_not_found/(?P<fingerprint>.+)/$',
                         'weatherapp.views.fingerprint_not_found'),
-    (r'^error/(?P<error_type>[a-z_]+)/(?P<key>.+)/$', 
+    (r'^error/(?P<error_type>[a-z_]+)/(?P<key>.+)/$',
                         'weatherapp.views.error'),
-    (r'^resend_conf/(?P<confirm_auth>.+)/$', 
+    (r'^resend_conf/(?P<confirm_auth>.+)/$',
                         'weatherapp.views.resend_conf'),
     (r'^notification_info/$', 'weatherapp.views.notification_info'),
-    (r'^router_name_lookup/$', 
+    (r'^router_name_lookup/$',
                         'weatherapp.views.router_name_lookup'),
     (r'^router_fingerprint_lookup/$',
                         'weatherapp.views.router_fingerprint_lookup'),
-    
+
     # This is for serving static files for the development server, mainly for
     # getting the CSS file and jquery file.
     (r'^media/(?P<path>.*)$', 'django.views.static.serve',

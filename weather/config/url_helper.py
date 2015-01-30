@@ -1,5 +1,5 @@
-"""The url_helper module stores all of the url extensions and methods for 
-accessing them. That way, all of the url extensions can be changed in one 
+"""The url_helper module stores all of the url extensions and methods for
+accessing them. That way, all of the url extensions can be changed in one
 place if they are ever modified in urls.py.
 
 @var base_url: The base URL for the Tor Weather web application.
@@ -13,12 +13,12 @@ place if they are ever modified in urls.py.
 @var _RESEND_CONF: The url pattern for the page displayed after the confirmation
     needed email is resent.
 @var _SUBSCRIBE: The url pattern for the subscribe form page.
-@var _UNSUBSCRIBE: The url pattern for the page displayed when the user 
+@var _UNSUBSCRIBE: The url pattern for the page displayed when the user
     unsubscribes.
 @var _DOWNLOAD: The url for the Tor download page.
 @var _T_SHIRT: The url for the Tor T-Shirt page.
 """
-import config 
+import config
 
 base_url = config.base_url
 
@@ -36,69 +36,70 @@ _DOWNLOAD = 'https://www.torproject.org/easy-download.html'
 _T_SHIRT = 'https://www.torproject.org/getinvolved/tshirt.html'
 
 def get_confirm_url(confirm_auth):
-    """Returns a string representation of the full url for the confirmation 
+    """
+    Returns a string representation of the full url for the confirmation
     page, which is sent to the user in an email after they subscribe.
 
     @type confirm_auth: str
-    @param confirm_auth: The user's unique confirmation authorization key, 
-        which is used to prevent inappropriate access of this page and to 
-        access specific information about the user from the database 
-        (email, unsubs_auth, and pref_auth) to be displayed on the 
+    @param confirm_auth: The user's unique confirmation authorization key,
+        which is used to prevent inappropriate access of this page and to
+        access specific information about the user from the database
+        (email, unsubs_auth, and pref_auth) to be displayed on the
         confirmation page. The key is incorporated into the url.
     @rtype: str
-    @return: The user-specific confirmation url. 
+    @return: The user-specific confirmation url.
     """
     url = base_url + _CONFIRM % confirm_auth
     return url
 
 def get_confirm_pref_ext(pref_auth):
-    """Returns the url extension for the page confirming the user's 
+    """Returns the url extension for the page confirming the user's
     submitted changes to their Tor Weather preferences.
 
     @type pref_auth: str
     @param pref_auth: The user's unique preferences authorization key,
-        which is used to prevent inappropriate access of this page and to 
-        access specific information about the user from the database 
-        (pref_auth, unsubs_auth) to be displayed on the page. The key is 
+        which is used to prevent inappropriate access of this page and to
+        access specific information about the user from the database
+        (pref_auth, unsubs_auth) to be displayed on the page. The key is
         incorporated into the url.
     @rtype: str
-    @return: The url extension for the user-specific preferences changed 
+    @return: The url extension for the user-specific preferences changed
         page.
     """
     extension = _CONFIRM_PREF % pref_auth
     return extension
 
 def get_error_ext(error_type, key):
-    """Returns the url extension for the error page specified by the 
-    error_type 
+    """Returns the url extension for the error page specified by the
+    error_type
     parameter.
 
     @type error_type: str
-    @param error_type: The type of error message to be displayed to the 
+    @param error_type: The type of error message to be displayed to the
         user.
     @type key: str
-    @param key: A user-specific key, the meaning of which depends on the 
+    @param key: A user-specific key, the meaning of which depends on the
         type of error encountered. For a fingerprint not found error, the
-        key represents the fingerprint the user tried to enter. For an 
-        already subscribed error, the key is the user's preferences 
+        key represents the fingerprint the user tried to enter. For an
+        already subscribed error, the key is the user's preferences
         authorization key, which is utilized in page rendering. The key is
         incorporated into the url extension.
     @rtype: str
     @return: The url extension for the user-specific error page.
     """
     extension = _ERROR % (error_type, key)
-    return extension 
+    return extension
 
 def get_fingerprint_info_ext(fingerprint):
-    """Returns the url extension for the page alerting the user that the 
+    """Returns the url extension for the page alerting the user that the
     fingerprint they are trying to monitor doesn't exist in the database.
 
     @type fingerprint: str
     @param fingerprint: The fingerprint the user entered, which is
         incorporated into the url.
     @rtype: str
-    @return: The url extension for the user-specific fingerprint error 
-        page. 
+    @return: The url extension for the user-specific fingerprint error
+        page.
     """
     extension = _FINGERPRINT_NOT_FOUND % fingerprint
     return extension
@@ -144,7 +145,7 @@ def get_preferences_url(pref_auth):
     @param pref_auth: The user's unique preferences authorization key, which
         is incorporated into the url.
     @rtype: str
-    @return: The complete url that links to the page allowing the user to 
+    @return: The complete url that links to the page allowing the user to
         change his or her Tor Weather preferences.
     """
     url = base_url + _PREFERENCES % pref_auth
@@ -152,7 +153,7 @@ def get_preferences_url(pref_auth):
 
 def get_preferences_ext(pref_auth):
     """Returns the url extension for the user-specific preferences page.
-    
+
     @type pref_auth: str
     @param pref_auth: The user's unique preferences authorization key, which
         is incorporated into the url.
@@ -165,7 +166,7 @@ def get_preferences_ext(pref_auth):
 def get_resend_ext(confirm_auth):
     """Returns the url extension for the page displayed after the user
     asks to be resent their confirmation email.
-    
+
     @type confirm_auth: str
     @param confirm_auth: The user's unique confirmation authorization key,
         which is incorporated into the url extension.
@@ -176,8 +177,8 @@ def get_resend_ext(confirm_auth):
     return extension
 
 def get_subscribe_ext():
-    """Returns the url extension for the Tor Weather subscribe page. 
-    
+    """Returns the url extension for the Tor Weather subscribe page.
+
     @rtype: str
     @return: The url extension for the subscribe page.
     """
@@ -186,11 +187,11 @@ def get_subscribe_ext():
 
 def get_unsubscribe_url(unsubs_auth):
     """Returns the complete url for the user's unsubscribe page. The url is
-    displayed to the user in the email reports and on some of the Tor 
+    displayed to the user in the email reports and on some of the Tor
     Weather pages.
 
     @type unsubs_auth: str
-    @param unsubs_auth: The user's unique unsubscribe authorization key, 
+    @param unsubs_auth: The user's unique unsubscribe authorization key,
         which is incorporated into the url.
     @rtype: str
     @return: The complete url for the user's unique unsubscribe page.
@@ -200,7 +201,7 @@ def get_unsubscribe_url(unsubs_auth):
 
 def get_download_url():
     """Returns the Tor downloads urls
-    
+
     @rtype: str
     @return: The url for the Tor downloads page.
     """
