@@ -37,7 +37,7 @@ class TestFullRegistration:
         # find our email, from the vagrant box
         email_path = '../vagrant-emails'
         emails = listdir(email_path)
-        assert(len(emails) == 1)
+        assert len(emails) == 1
         with open(join(email_path, emails[0]), 'r') as f:
             return f.readlines()
 
