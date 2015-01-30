@@ -9,7 +9,7 @@ from fabric.api import local
 
 @pytest.mark.incremental
 class TestFullRegistration:
-    def test_subscribe(self, driver, clean_data):
+    def test_subscribe(self, driver, clean_data, onionoo):
         '''confirm we can subscribe'''
         # setup
         driver.get('https://weather.dev')
@@ -50,7 +50,7 @@ class TestFullRegistration:
             )
         )
 
-    def test_confirmation_link(self, driver, confirmation_email):
+    def test_confirmation_link(self, driver, confirmation_email, onionoo):
         '''confirm the confirmation link works'''
         matcher = re.compile(r'(https://weather\.dev/confirm/.*)')
         urls = filter(
@@ -70,7 +70,7 @@ class TestFullRegistration:
         # ...and is there an additional email, now?
         assert(len(listdir('../vagrant-emails')) == 2)
 
-    def test_unsubscribe(self, driver):
+    def test_unsubscribe(self, driver, onionoo):
         driver.find_element_by_id("unsubscribe-link").click()
 
         assert('subscription removed' in driver.title.lower())

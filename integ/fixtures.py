@@ -5,11 +5,10 @@ from selenium.webdriver import Firefox
 from fabric.api import cd, local
 
 @pytest.fixture(scope="module")
-def driver(request, onionoo):
-    """
+def driver(request):
+    '''
     Launches a Selenium instance.
-    FIXME XXX making driver depend on onionoo is just being lazy for now
-    """
+    '''
     driver = Firefox()
     if True:
         request.addfinalizer(lambda: driver.quit())
@@ -19,8 +18,13 @@ def driver(request, onionoo):
 
 @pytest.fixture(scope="module")
 def onionoo(request):
+    '''
+    Runs the fake OnionOO server on the Vagrant VM; this just servs
+    pre-canned data for /summary and /details.
+    '''
     fakeoo = Popen(
-        ['vagrant', 'ssh', '-c', 'sudo twistd --pidfile=/tmp/oo.pid cyclone /home/weather/opt/current/vagrant/fake-onionoo.py'],
+        ['vagrant', 'ssh', '-c',
+         'sudo twistd --pidfile=/tmp/oo.pid cyclone /home/weather/opt/current/vagrant/fake-onionoo.py'],
         cwd=join(split(__file__)[0], '..')
     )
     def terminate():
