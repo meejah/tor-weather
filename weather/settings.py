@@ -119,7 +119,7 @@ EMAIL_HOST_PASSWORD = ''
 EMAIL_HOST_USER = ''
 EMAIL_PORT = '25'
 EMAIL_USE_TLS = False
-# XXX what if we just don't set these? do the "other" ones work then?
-# XXX no, they do not :(
+# NOTE that Vagrant will end up using whatever is in here, so it
+# SHOULD be EmailBackend...
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = '/home/weather/opt/current/vagrant-emails/'

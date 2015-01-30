@@ -62,16 +62,7 @@ echo "Create weather user"
 useradd weather --groups debian-tor --create-home
 echo "Create ~/opt/current"
 mkdir -p ~weather/opt/current
-echo "Set EMAIL_BACKEND"
-echo "Set EMAIL_FILE_PATH"
-grep EMAIL_BACKEND /home/weather/opt/current/weather/settings.py > /dev/null
-if [ $? -ne 0 ]; then
-    cat >> /home/weather/opt/current/weather/settings.py << EOF
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-# FIXME XXX get this from ../weather/settings.py where appropriate
-EMAIL_FILE_PATH = '/home/weather/opt/current/vagrant-emails/'
-EOF
-    echo "Done!"
+echo "Done!"
 fi
 
 # generate ssl cert
